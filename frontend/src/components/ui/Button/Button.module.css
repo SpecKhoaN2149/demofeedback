@@ -1,0 +1,100 @@
+/**
+ * Button component styles.
+ * References Spectrum design tokens (var(--spectrum-*)) defined in tokens.css.
+ */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spectrum-space-2);
+  font-family: var(--spectrum-font-family);
+  font-weight: var(--spectrum-font-weight-semibold);
+  line-height: var(--spectrum-line-height-tight);
+  border-radius: var(--spectrum-radius-md);
+  border: 2px solid transparent;
+  cursor: pointer;
+  text-align: center;
+  white-space: nowrap;
+  user-select: none;
+  transition: filter var(--spectrum-transition-fast) ease-in-out,
+    background-color var(--spectrum-transition-fast) ease-in-out,
+    color var(--spectrum-transition-fast) ease-in-out,
+    border-color var(--spectrum-transition-fast) ease-in-out;
+}
+
+/* Hover: darken background by ~10% (Requirement 3.7) */
+.button:hover {
+  filter: brightness(0.9);
+}
+
+/* Keyboard focus: 2px Spectrum Blue ring with 2px offset (Requirement 3.8) */
+.button:focus-visible {
+  outline: 2px solid var(--spectrum-color-primary);
+  outline-offset: 2px;
+}
+
+/* Disabled: opacity 0.5, not-allowed cursor, no pointer events (Requirement 3.9) */
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Variants */
+
+/* Primary (Requirement 3.2) */
+.primary {
+  background-color: var(--spectrum-color-primary);
+  color: var(--spectrum-color-text-inverse);
+  border-color: var(--spectrum-color-primary);
+}
+
+/* Secondary (Requirement 3.3) */
+.secondary {
+  background-color: var(--spectrum-color-secondary);
+  color: var(--spectrum-color-text-inverse);
+  border-color: var(--spectrum-color-secondary);
+}
+
+/* Outline (Requirement 3.4) */
+.outline {
+  background-color: transparent;
+  color: var(--spectrum-color-primary);
+  border: 2px solid var(--spectrum-color-primary);
+}
+
+/* Ghost (Requirement 3.5) */
+.ghost {
+  background-color: transparent;
+  color: var(--spectrum-color-primary);
+  border-color: transparent;
+}
+
+/* Sizes (Requirement 3.6) */
+
+/* Small: 32px height, 14px font */
+.small {
+  height: 32px;
+  padding: 0 var(--spectrum-space-3);
+  font-size: var(--spectrum-font-size-sm);
+}
+
+/* Medium (default): 40px height, 16px font */
+.medium {
+  height: 40px;
+  padding: 0 var(--spectrum-space-4);
+  font-size: var(--spectrum-font-size-base);
+}
+
+/* Large: 48px height, 18px font */
+.large {
+  height: 48px;
+  padding: 0 var(--spectrum-space-6);
+  font-size: var(--spectrum-font-size-lg);
+}
+
+/* Full width modifier */
+.fullWidth {
+  width: 100%;
+}

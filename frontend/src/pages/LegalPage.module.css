@@ -1,0 +1,38 @@
+/**
+ * Shared styles for static legal pages (Terms of Service, Privacy Policy).
+ * References Spectrum design tokens (var(--spectrum-*)) defined in tokens.css.
+ */
+
+.page {
+  max-width: 760px;
+  margin-inline: auto;
+  animation: fadeIn var(--spectrum-transition-normal) ease-in-out;
+}
+
+.title {
+  font-size: var(--spectrum-font-size-3xl);
+  font-weight: var(--spectrum-font-weight-bold);
+  line-height: var(--spectrum-line-height-tight);
+  color: var(--spectrum-color-text-primary);
+  margin: 0 0 var(--spectrum-space-2);
+}
+
+.updated {
+  font-size: var(--spectrum-font-size-sm);
+  color: var(--spectrum-color-text-secondary);
+  margin: 0 0 var(--spectrum-space-6);
+}
+
+.heading {
+  font-size: var(--spectrum-font-size-xl);
+  font-weight: var(--spectrum-font-weight-semibold);
+  color: var(--spectrum-color-text-primary);
+  margin: var(--spectrum-space-6) 0 var(--spectrum-space-2);
+}
+
+.body {
+  font-size: var(--spectrum-font-size-base);
+  line-height: var(--spectrum-line-height-relaxed);
+  color: var(--spectrum-color-text-secondary);
+  margin: 0 0 var(--spectrum-space-4);
+}

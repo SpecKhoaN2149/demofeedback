@@ -1,0 +1,67 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.label {
+  font-family: var(--spectrum-font-family);
+  font-size: var(--spectrum-font-size-sm);
+  font-weight: var(--spectrum-font-weight-medium); /* 500 */
+  color: var(--spectrum-color-text-primary);
+  margin-bottom: var(--spectrum-space-1); /* 4px */
+}
+
+.input {
+  font-family: var(--spectrum-font-family);
+  font-size: var(--spectrum-font-size-base);
+  color: var(--spectrum-color-text-primary);
+  background-color: var(--spectrum-color-white);
+  border: 1px solid var(--spectrum-color-neutral-300);
+  border-radius: var(--spectrum-radius-sm);
+  padding: var(--spectrum-space-3) var(--spectrum-space-4); /* 12px vertical / 16px horizontal */
+  width: 100%;
+  transition: border-color var(--spectrum-transition-fast) ease-in-out,
+    box-shadow var(--spectrum-transition-fast) ease-in-out;
+}
+
+.input::placeholder {
+  color: var(--spectrum-color-neutral-400);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--spectrum-color-primary);
+  /* 3px light-blue outer glow: Spectrum Blue (#0059B8) at 20% opacity */
+  box-shadow: 0 0 0 3px rgba(0, 89, 184, 0.2);
+}
+
+.input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: var(--spectrum-color-neutral-100);
+}
+
+/* Error state */
+.error {
+  border-color: var(--spectrum-color-error);
+}
+
+.error:focus {
+  border-color: var(--spectrum-color-error);
+  box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.2);
+}
+
+.errorMessage {
+  font-family: var(--spectrum-font-family);
+  font-size: var(--spectrum-font-size-sm);
+  color: var(--spectrum-color-error);
+  margin-top: var(--spectrum-space-1); /* 4px */
+}
+
+.helpText {
+  font-family: var(--spectrum-font-family);
+  font-size: var(--spectrum-font-size-sm);
+  color: var(--spectrum-color-text-secondary);
+  margin-top: var(--spectrum-space-1); /* 4px */
+}

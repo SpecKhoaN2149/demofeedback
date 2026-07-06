@@ -1,0 +1,62 @@
+/**
+ * NotFound (404) page styles.
+ * References Spectrum design tokens (var(--spectrum-*)) defined in tokens.css.
+ */
+
+.page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  animation: fadeIn var(--spectrum-transition-normal) ease-in-out;
+}
+
+.card {
+  width: 100%;
+  max-width: 520px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spectrum-space-3);
+  align-items: center;
+}
+
+.code {
+  font-size: var(--spectrum-font-size-3xl);
+  font-weight: var(--spectrum-font-weight-bold);
+  color: var(--spectrum-color-primary);
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.title {
+  font-size: var(--spectrum-font-size-2xl);
+  font-weight: var(--spectrum-font-weight-bold);
+  color: var(--spectrum-color-text-primary);
+  margin: 0;
+}
+
+.message {
+  font-size: var(--spectrum-font-size-base);
+  color: var(--spectrum-color-text-secondary);
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  gap: var(--spectrum-space-3);
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: var(--spectrum-space-4);
+}
+
+@media (max-width: 767.98px) {
+  .actions {
+    flex-direction: column;
+    align-self: stretch;
+  }
+
+  .actions button {
+    width: 100%;
+  }
+}

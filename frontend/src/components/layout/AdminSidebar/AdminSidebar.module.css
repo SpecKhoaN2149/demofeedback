@@ -1,0 +1,53 @@
+/**
+ * AdminSidebar component styles.
+ * References Spectrum design tokens (var(--spectrum-*)) defined in tokens.css.
+ * Fixed 240px width on desktop with active link highlighting using Spectrum
+ * Blue background + white text (Requirement 11.1).
+ */
+
+.sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  background-color: var(--spectrum-color-surface);
+  border-right: 1px solid var(--spectrum-color-neutral-200);
+  padding: var(--spectrum-space-4) 0;
+  font-family: var(--spectrum-font-family);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spectrum-space-1);
+}
+
+.link {
+  display: block;
+  padding: var(--spectrum-space-3) var(--spectrum-space-4);
+  margin: 0 var(--spectrum-space-2);
+  border-radius: var(--spectrum-radius-md);
+  color: var(--spectrum-color-text-primary);
+  font-size: var(--spectrum-font-size-base);
+  font-weight: var(--spectrum-font-weight-medium);
+  text-decoration: none;
+  transition: background-color var(--spectrum-transition-fast) ease,
+    color var(--spectrum-transition-fast) ease;
+}
+
+.link:hover {
+  background-color: var(--spectrum-color-neutral-200);
+}
+
+.link:focus-visible {
+  outline: 2px solid var(--spectrum-color-primary);
+  outline-offset: 2px;
+}
+
+/* Active link: Spectrum Blue background, white text */
+.active,
+.active:hover {
+  background-color: var(--spectrum-color-primary);
+  color: var(--spectrum-color-text-inverse);
+}

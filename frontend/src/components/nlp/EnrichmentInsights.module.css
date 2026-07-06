@@ -1,0 +1,163 @@
+/**
+ * EnrichmentInsights styles — visualizes NLP output (themes, severity,
+ * confidence, language). References Spectrum design tokens from tokens.css.
+ */
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spectrum-space-5);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spectrum-space-2);
+}
+
+.label {
+  font-size: var(--spectrum-font-size-xs);
+  font-weight: var(--spectrum-font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--spectrum-color-text-secondary);
+  margin: 0;
+}
+
+/* ---- Themes as chips with confidence ---- */
+.themes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spectrum-space-2);
+}
+
+.themeChip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--spectrum-space-2);
+  padding: var(--spectrum-space-1) var(--spectrum-space-3);
+  border-radius: var(--spectrum-radius-full);
+  background-color: var(--spectrum-color-info-light);
+  color: var(--spectrum-color-info-text);
+  font-size: var(--spectrum-font-size-sm);
+  font-weight: var(--spectrum-font-weight-medium);
+}
+
+.themeConfidence {
+  font-size: var(--spectrum-font-size-xs);
+  font-weight: var(--spectrum-font-weight-semibold);
+  opacity: 0.8;
+}
+
+/* ---- Severity meter (1..5) ---- */
+.severityRow {
+  display: flex;
+  align-items: center;
+  gap: var(--spectrum-space-3);
+}
+
+.severityDots {
+  display: inline-flex;
+  gap: var(--spectrum-space-1);
+}
+
+.dot {
+  width: 14px;
+  height: 14px;
+  border-radius: var(--spectrum-radius-full);
+  background-color: var(--spectrum-color-neutral-200);
+}
+
+.dotFilled {
+  background-color: var(--spectrum-color-primary);
+}
+
+.dotSevere {
+  background-color: var(--spectrum-color-error);
+}
+
+.dotElevated {
+  background-color: var(--spectrum-color-warning);
+}
+
+.severityValue {
+  font-size: var(--spectrum-font-size-sm);
+  font-weight: var(--spectrum-font-weight-semibold);
+  color: var(--spectrum-color-text-primary);
+}
+
+.factors {
+  margin: 0;
+  padding-left: var(--spectrum-space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spectrum-space-1);
+  list-style: disc;
+}
+
+.factor {
+  font-size: var(--spectrum-font-size-sm);
+  color: var(--spectrum-color-text-secondary);
+}
+
+/* ---- Confidence bar ---- */
+.confidenceRow {
+  display: flex;
+  align-items: center;
+  gap: var(--spectrum-space-3);
+}
+
+.bar {
+  flex: 1 1 auto;
+  height: 8px;
+  border-radius: var(--spectrum-radius-full);
+  background-color: var(--spectrum-color-neutral-200);
+  overflow: hidden;
+  max-width: 240px;
+}
+
+.barFill {
+  height: 100%;
+  background-color: var(--spectrum-color-accent);
+  border-radius: var(--spectrum-radius-full);
+  transition: width var(--spectrum-transition-normal) ease;
+}
+
+.confidenceValue {
+  font-size: var(--spectrum-font-size-sm);
+  font-weight: var(--spectrum-font-weight-semibold);
+  color: var(--spectrum-color-text-primary);
+  min-width: 3rem;
+}
+
+.language {
+  font-size: var(--spectrum-font-size-sm);
+  color: var(--spectrum-color-text-primary);
+}
+
+.muted {
+  font-size: var(--spectrum-font-size-sm);
+  color: var(--spectrum-color-text-secondary);
+}
+
+/* ---- Compact variant (table cells) ---- */
+.compact {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spectrum-space-2);
+}
+
+.compactThemes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spectrum-space-1);
+}
+
+.compactChip {
+  padding: 2px var(--spectrum-space-2);
+  border-radius: var(--spectrum-radius-full);
+  background-color: var(--spectrum-color-info-light);
+  color: var(--spectrum-color-info-text);
+  font-size: var(--spectrum-font-size-xs);
+  font-weight: var(--spectrum-font-weight-medium);
+}

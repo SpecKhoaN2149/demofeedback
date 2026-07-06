@@ -1,0 +1,61 @@
+/**
+ * ProgressBar component styles.
+ * References Spectrum design tokens (var(--spectrum-*)) defined in tokens.css
+ * and the `pulse` keyframe defined in animations.css.
+ */
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spectrum-space-2);
+  width: 100%;
+}
+
+/* Optional text label rendered above the track */
+.label {
+  font-family: var(--spectrum-font-family);
+  font-size: var(--spectrum-font-size-sm);
+  font-weight: var(--spectrum-font-weight-medium);
+  color: var(--spectrum-color-text-secondary);
+  line-height: var(--spectrum-line-height-normal);
+}
+
+/* Track: light gray background with full border-radius (Requirement 6.1) */
+.track {
+  width: 100%;
+  background-color: var(--spectrum-color-neutral-200);
+  border-radius: var(--spectrum-radius-full);
+  overflow: hidden;
+}
+
+/* Fill: Spectrum Blue with animated width transition (Requirements 6.1, 6.2) */
+.fill {
+  height: 100%;
+  background-color: var(--spectrum-color-primary);
+  border-radius: var(--spectrum-radius-full);
+  transition: width var(--spectrum-transition-normal) ease-in-out,
+    background-color var(--spectrum-transition-normal) ease-in-out;
+}
+
+/* Size variants (Requirement 6.5) */
+.small {
+  height: 4px;
+}
+
+.default {
+  height: 8px;
+}
+
+.large {
+  height: 12px;
+}
+
+/* Pulsing animation: opacity fades 0.6 -> 1.0 loop (Requirement 6.3) */
+.pulsing {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Complete state: fill switches to success color at 100% (Requirement 6.4) */
+.complete {
+  background-color: var(--spectrum-color-success);
+}

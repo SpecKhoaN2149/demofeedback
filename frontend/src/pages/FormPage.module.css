@@ -1,0 +1,81 @@
+/**
+ * Shared page styles for the sentiment form pages (positive/negative/neutral).
+ * Applies the fade-in entry animation at the normal transition duration
+ * (Requirement 15.3) and guards against horizontal overflow (Requirement 14.5).
+ * Field styling comes from the design-system components (Input, Textarea,
+ * Select, Button); this module handles page-level layout and spacing.
+ */
+.page {
+  width: 100%;
+  max-width: 600px;
+  margin-inline: auto;
+  /* Fade-in on page entry, normal transition duration (Requirement 15.3). */
+  animation: fadeIn var(--spectrum-transition-normal) ease-in-out;
+}
+
+/* Back link above the heading, providing a way back to the previous step. */
+.back {
+  margin-bottom: var(--spectrum-space-4);
+}
+
+/* Page heading, consistent across the sentiment forms. */
+.heading {
+  font-size: var(--spectrum-font-size-2xl);
+  font-weight: var(--spectrum-font-weight-bold);
+  line-height: var(--spectrum-line-height-tight);
+  color: var(--spectrum-color-text-primary);
+  margin: 0 0 var(--spectrum-space-2);
+}
+
+/* Optional supporting copy under the heading. */
+.subtitle {
+  font-size: var(--spectrum-font-size-base);
+  color: var(--spectrum-color-text-secondary);
+  margin: 0 0 var(--spectrum-space-6);
+}
+
+/* Vertical form stack with consistent 16px spacing between fields. */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spectrum-space-4);
+}
+
+/* Character counter shown beneath a textarea, right-aligned and muted. */
+.charCounter {
+  display: block;
+  text-align: right;
+  font-size: var(--spectrum-font-size-xs);
+  color: var(--spectrum-color-text-secondary);
+  margin-top: calc(-1 * var(--spectrum-space-2));
+}
+
+/* Checkbox + label row (e.g. social sharing opt-in). */
+.checkboxRow {
+  display: flex;
+  align-items: center;
+  gap: var(--spectrum-space-2);
+  font-size: var(--spectrum-font-size-base);
+  color: var(--spectrum-color-text-primary);
+  cursor: pointer;
+}
+
+.checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--spectrum-color-primary);
+  cursor: pointer;
+}
+
+/* Submit button: full width on mobile, content-width on larger viewports. */
+.submit {
+  align-self: flex-start;
+  margin-top: var(--spectrum-space-2);
+}
+
+@media (max-width: 767.98px) {
+  .submit {
+    align-self: stretch;
+    width: 100%;
+  }
+}

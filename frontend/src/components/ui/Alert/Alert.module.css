@@ -1,0 +1,98 @@
+/**
+ * Alert component styles.
+ * References Spectrum design tokens (var(--spectrum-*)) defined in tokens.css.
+ * Each severity uses its semantic color for the 4px left border and its light
+ * variant for the background tint (Requirement 7.1, 7.2).
+ */
+
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spectrum-space-3);
+  padding: var(--spectrum-space-3) var(--spectrum-space-4);
+  border-radius: var(--spectrum-radius-md);
+  border-left: 4px solid transparent;
+  font-family: var(--spectrum-font-family);
+  font-size: var(--spectrum-font-size-sm);
+  line-height: var(--spectrum-line-height-normal);
+  color: var(--spectrum-color-text-primary);
+}
+
+.icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.content {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+/* Close button (Requirement 7.2 — inherits severity color via currentColor) */
+.close {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spectrum-space-1);
+  margin: calc(-1 * var(--spectrum-space-1)) 0 0;
+  background: transparent;
+  border: none;
+  border-radius: var(--spectrum-radius-sm);
+  color: inherit;
+  cursor: pointer;
+  transition: background-color var(--spectrum-transition-fast) ease-in-out;
+}
+
+.close:hover {
+  background-color: rgba(0, 0, 0, 0.06);
+}
+
+.close:focus-visible {
+  outline: 2px solid var(--spectrum-color-primary);
+  outline-offset: 2px;
+}
+
+/* Severities */
+
+/* Success (green) */
+.success {
+  background-color: var(--spectrum-color-success-light);
+  border-left-color: var(--spectrum-color-success);
+}
+
+.success .icon {
+  color: var(--spectrum-color-success);
+}
+
+/* Warning (amber) */
+.warning {
+  background-color: var(--spectrum-color-warning-light);
+  border-left-color: var(--spectrum-color-warning);
+}
+
+.warning .icon {
+  color: var(--spectrum-color-warning);
+}
+
+/* Error (red) — red-tinted close icon (Requirement 7.2) */
+.error {
+  background-color: var(--spectrum-color-error-light);
+  border-left-color: var(--spectrum-color-error);
+}
+
+.error .icon,
+.error .close {
+  color: var(--spectrum-color-error);
+}
+
+/* Info (blue) */
+.info {
+  background-color: var(--spectrum-color-info-light);
+  border-left-color: var(--spectrum-color-info);
+}
+
+.info .icon {
+  color: var(--spectrum-color-info);
+}

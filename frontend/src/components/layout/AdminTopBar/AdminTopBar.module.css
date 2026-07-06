@@ -1,0 +1,81 @@
+/**
+ * AdminTopBar component styles.
+ * References Spectrum design tokens (var(--spectrum-*)) defined in tokens.css.
+ *
+ * Mirrors the public Header: fixed-height Spectrum Dark Navy bar with the
+ * light wordmark on the left and account actions on the right.
+ */
+
+.bar {
+  background-color: var(--spectrum-color-secondary); /* Spectrum Dark Navy */
+  box-shadow: var(--spectrum-shadow-sm);
+  font-family: var(--spectrum-font-family);
+}
+
+.inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spectrum-space-4);
+  padding: var(--spectrum-space-2) var(--spectrum-space-6);
+}
+
+.logoLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spectrum-space-3);
+  text-decoration: none;
+  border-radius: var(--spectrum-radius-sm);
+}
+
+.logoLink:focus-visible {
+  outline: 2px solid var(--spectrum-color-accent);
+  outline-offset: 2px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px var(--spectrum-space-2);
+  border-radius: var(--spectrum-radius-full);
+  background-color: var(--spectrum-color-accent);
+  color: var(--spectrum-color-secondary);
+  font-size: var(--spectrum-font-size-xs);
+  font-weight: var(--spectrum-font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: var(--spectrum-space-4);
+}
+
+.user {
+  color: var(--spectrum-color-text-inverse);
+  font-size: var(--spectrum-font-size-sm);
+}
+
+/* Override the outline Button treatment so it stays legible on the navy bar
+   (white text/border instead of Spectrum Blue on Dark Navy). Descendant
+   selector guarantees this wins over Button.module.css .outline. */
+.bar .logout {
+  color: var(--spectrum-color-text-inverse);
+  border-color: var(--spectrum-color-text-inverse);
+  background-color: transparent;
+}
+
+.bar .logout:hover {
+  filter: none;
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+@media (max-width: 767.98px) {
+  .inner {
+    padding: var(--spectrum-space-2) var(--spectrum-space-4);
+  }
+
+  .user {
+    display: none;
+  }
+}

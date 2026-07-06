@@ -1,0 +1,35 @@
+/**
+ * StatusLookup page styles.
+ * References Spectrum design tokens (var(--spectrum-*)) defined in tokens.css.
+ */
+
+.page {
+  max-width: 600px;
+  margin-inline: auto;
+  animation: fadeIn var(--spectrum-transition-normal) ease-in-out;
+}
+
+.title {
+  font-family: var(--spectrum-font-family);
+  font-size: var(--spectrum-font-size-2xl);
+  font-weight: var(--spectrum-font-weight-bold);
+  line-height: var(--spectrum-line-height-tight);
+  color: var(--spectrum-color-text-primary);
+  text-align: center;
+  margin: 0;
+}
+
+.subtitle {
+  font-family: var(--spectrum-font-family);
+  font-size: var(--spectrum-font-size-base);
+  color: var(--spectrum-color-text-secondary);
+  text-align: center;
+  margin: var(--spectrum-space-2) 0 0;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spectrum-space-4);
+  margin-top: var(--spectrum-space-6);
+}

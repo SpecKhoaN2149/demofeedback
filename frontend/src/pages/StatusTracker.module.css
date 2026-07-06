@@ -1,0 +1,76 @@
+/**
+ * StatusTracker page styles.
+ * References Spectrum design tokens (var(--spectrum-*)) defined in tokens.css.
+ */
+
+/* Center content both horizontally and vertically within the content area,
+   constrained to a maximum width of 600px (Requirement 10.5). */
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  width: 100%;
+}
+
+/* The Card that holds the progress bar, centered with a 600px max-width
+   (Requirements 10.1, 10.5). */
+.card {
+  width: 100%;
+  max-width: 600px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spectrum-space-4);
+}
+
+.title {
+  font-size: var(--spectrum-font-size-2xl);
+  font-weight: var(--spectrum-font-weight-bold);
+  color: var(--spectrum-color-text-primary);
+  margin: 0;
+}
+
+/* Progress percentage displayed as text above the bar (Requirement 10.1). */
+.percentage {
+  font-size: var(--spectrum-font-size-xl);
+  font-weight: var(--spectrum-font-weight-semibold);
+  color: var(--spectrum-color-primary);
+  margin: 0;
+}
+
+/* Status message below the ProgressBar using the lg font-size token and
+   text-primary color (Requirement 10.2). */
+.message {
+  font-size: var(--spectrum-font-size-lg);
+  color: var(--spectrum-color-text-primary);
+  line-height: var(--spectrum-line-height-normal);
+  margin: 0;
+}
+
+/* Subtle NLP "analyzed" confirmation line. */
+.analyzed {
+  font-size: var(--spectrum-font-size-sm);
+  color: var(--spectrum-color-success-text);
+  font-weight: var(--spectrum-font-weight-medium);
+  margin: 0;
+}
+
+/* Center the retry button within the card. */
+.retryWrapper {
+  display: flex;
+  justify-content: center;
+}
+
+/* Mobile (< 768px): the retry action button expands to full width
+   (Requirement 14.2). On tablet/desktop it sizes to its content. */
+@media (max-width: 767.98px) {
+  .retryWrapper {
+    align-self: stretch;
+  }
+
+  .retryWrapper button {
+    width: 100%;
+  }
+}

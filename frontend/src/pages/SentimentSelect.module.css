@@ -1,0 +1,72 @@
+/**
+ * SentimentSelect page styles.
+ * References Spectrum design tokens (var(--spectrum-*)) defined in tokens.css.
+ */
+
+.heading {
+  font-size: var(--spectrum-font-size-2xl);
+  font-weight: var(--spectrum-font-weight-bold);
+  line-height: var(--spectrum-line-height-tight);
+  color: var(--spectrum-color-text-primary);
+  text-align: center;
+  margin-bottom: var(--spectrum-space-8);
+}
+
+/* Back link above the heading. */
+.back {
+  margin-bottom: var(--spectrum-space-4);
+}
+
+/* Vertical stack on mobile (< 768px) by default (Requirement 9.1) */
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spectrum-space-6);
+}
+
+/* Horizontal row on viewports 768px and wider (Requirement 9.1) */
+@media (min-width: 768px) {
+  .cards {
+    flex-direction: row;
+  }
+
+  .card {
+    flex: 1 1 0;
+  }
+}
+
+/* Each card lays out its icon, title, and description vertically. */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spectrum-space-2);
+}
+
+/* Colored left-border accents per sentiment (Requirement 9.3) */
+.negative {
+  border-left: 4px solid var(--spectrum-color-error);
+}
+
+.positive {
+  border-left: 4px solid var(--spectrum-color-success);
+}
+
+.neutral {
+  border-left: 4px solid var(--spectrum-color-info);
+}
+
+.icon {
+  font-size: var(--spectrum-font-size-3xl);
+  line-height: 1;
+}
+
+.title {
+  font-size: var(--spectrum-font-size-lg);
+  font-weight: var(--spectrum-font-weight-semibold);
+  color: var(--spectrum-color-text-primary);
+}
+
+.description {
+  font-size: var(--spectrum-font-size-base);
+  color: var(--spectrum-color-text-secondary);
+}

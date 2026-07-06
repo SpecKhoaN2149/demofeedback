@@ -1,0 +1,57 @@
+/* ==========================================================================
+   Spectrum Design System — Animations & Transitions
+   ==========================================================================
+   Keyframe definitions and motion utilities for the Spectrum UI.
+   All animations respect prefers-reduced-motion for accessibility.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Keyframes
+   -------------------------------------------------------------------------- */
+
+/**
+ * Pulse animation for ProgressBar pulsing effect.
+ * Fades opacity between 0.6 and 1.0 to indicate an in-progress state.
+ */
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+/**
+ * Fade-in animation for page transitions.
+ * Used when entering a new page via react-router navigation.
+ */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Reduced Motion
+   --------------------------------------------------------------------------
+   Disables all transitions and animations globally when the user has enabled
+   the "prefers-reduced-motion" OS setting (WCAG 2.1 compliance).
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

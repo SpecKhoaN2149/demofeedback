@@ -1,0 +1,337 @@
+/**
+ * Shared admin page styles.
+ * References Spectrum design tokens (var(--spectrum-*)) defined in tokens.css.
+ *
+ * Provides:
+ * - Page-level fade-in on admin route changes (Requirement 15.3).
+ * - Summary stat cards for the dashboard (Requirement 11.5).
+ * - Data table styling: alternating row colors, 1px bottom borders, and
+ *   semibold header cells with a light gray background (Requirement 11.3).
+ * - Table action button wrapper spacing (Requirement 11.4).
+ */
+
+/* --------------------------------------------------------------------------
+   Page wrapper — fade-in on entry
+   -------------------------------------------------------------------------- */
+.page {
+  animation: fadeIn var(--spectrum-transition-normal) ease-in-out;
+  font-family: var(--spectrum-font-family);
+  color: var(--spectrum-color-text-primary);
+}
+
+.page h1 {
+  font-size: var(--spectrum-font-size-3xl);
+  font-weight: var(--spectrum-font-weight-bold);
+  line-height: var(--spectrum-line-height-tight);
+  margin-bottom: var(--spectrum-space-6);
+}
+
+.page h2,
+.page h3 {
+  font-size: var(--spectrum-font-size-xl);
+  font-weight: var(--spectrum-font-weight-semibold);
+  line-height: var(--spectrum-line-height-tight);
+  margin-bottom: var(--spectrum-space-4);
+}
+
+.page section {
+  margin-bottom: var(--spectrum-space-8);
+}
+
+/* --------------------------------------------------------------------------
+   Summary stat cards (Dashboard) — Requirement 11.5
+   -------------------------------------------------------------------------- */
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--spectrum-space-4);
+  margin-bottom: var(--spectrum-space-8);
+}
+
+/* Each stat card gets a 4px colored top border indicating sentiment. */
+.statCard {
+  border-top: 4px solid var(--spectrum-color-neutral-300);
+  text-align: center;
+}
+
+.statValue {
+  font-size: var(--spectrum-font-size-3xl);
+  font-weight: var(--spectrum-font-weight-bold);
+  line-height: var(--spectrum-line-height-tight);
+  color: var(--spectrum-color-text-primary);
+}
+
+.statLabel {
+  font-size: var(--spectrum-font-size-sm);
+  color: var(--spectrum-color-text-secondary);
+  margin-top: var(--spectrum-space-1);
+}
+
+/* Colored top borders: blue total, red negative, green positive, gray neutral. */
+.borderTotal {
+  border-top-color: var(--spectrum-color-primary);
+}
+
+.borderNegative {
+  border-top-color: var(--spectrum-color-error);
+}
+
+.borderPositive {
+  border-top-color: var(--spectrum-color-success);
+}
+
+.borderNeutral {
+  border-top-color: var(--spectrum-color-neutral-400);
+}
+
+/* --------------------------------------------------------------------------
+   Data tables — Requirement 11.3
+   -------------------------------------------------------------------------- */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--spectrum-font-size-sm);
+}
+
+/* Semibold header cells with a light gray background. */
+.table thead th {
+  text-align: left;
+  font-weight: var(--spectrum-font-weight-semibold);
+  background-color: var(--spectrum-color-surface);
+  color: var(--spectrum-color-text-primary);
+  padding: var(--spectrum-space-3) var(--spectrum-space-4);
+  border-bottom: 1px solid var(--spectrum-color-neutral-300);
+}
+
+/* 1px bottom borders between rows. */
+.table tbody td {
+  padding: var(--spectrum-space-3) var(--spectrum-space-4);
+  border-bottom: 1px solid var(--spectrum-color-neutral-200);
+  color: var(--spectrum-color-text-primary);
+  vertical-align: top;
+}
+
+/* Alternating row background colors (white and surface token). */
+.table tbody tr:nth-child(odd) {
+  background-color: var(--spectrum-color-white);
+}
+
+.table tbody tr:nth-child(even) {
+  background-color: var(--spectrum-color-surface);
+}
+
+/* Table wrapper allows horizontal scroll on small viewports without overflowing
+   the page (Requirement 14.5). */
+.tableWrapper {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   Table action buttons — Requirement 11.4
+   -------------------------------------------------------------------------- */
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spectrum-space-2);
+  align-items: flex-start;
+}
+
+.actionRow {
+  display: flex;
+  gap: var(--spectrum-space-2);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* --------------------------------------------------------------------------
+   Misc admin layout helpers
+   -------------------------------------------------------------------------- */
+.error {
+  color: var(--spectrum-color-error);
+  background-color: var(--spectrum-color-error-light);
+  border-left: 4px solid var(--spectrum-color-error);
+  border-radius: var(--spectrum-radius-sm);
+  padding: var(--spectrum-space-3) var(--spectrum-space-4);
+  margin-bottom: var(--spectrum-space-4);
+}
+
+.subtitle {
+  color: var(--spectrum-color-text-secondary);
+  font-size: var(--spectrum-font-size-base);
+  margin-bottom: var(--spectrum-space-6);
+}
+
+.pagination {
+  display: flex;
+  gap: var(--spectrum-space-4);
+  align-items: center;
+  margin-top: var(--spectrum-space-6);
+}
+
+.commentCell {
+  max-width: 320px;
+  overflow-wrap: break-word;
+}
+
+/* Link styling for table rows that navigate to a detail view. */
+.rowLink {
+  color: var(--spectrum-color-primary);
+  font-weight: var(--spectrum-font-weight-medium);
+  text-decoration: none;
+}
+
+.rowLink:hover {
+  text-decoration: underline;
+}
+
+/* NLP analysis table cell wrapper. */
+.nlpCell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spectrum-space-2);
+  min-width: 220px;
+}
+
+.nlpEmpty {
+  font-size: var(--spectrum-font-size-sm);
+  color: var(--spectrum-color-text-secondary);
+}
+
+/* ---- Submission detail page ---- */
+.detailBack {
+  margin-bottom: var(--spectrum-space-4);
+}
+
+.detailGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spectrum-space-6);
+  align-items: start;
+}
+
+@media (max-width: 1023.98px) {
+  .detailGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.detailList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spectrum-space-3);
+  margin: var(--spectrum-space-4) 0 0;
+}
+
+.detailRow {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: var(--spectrum-space-3);
+}
+
+.detailRow dt {
+  font-size: var(--spectrum-font-size-sm);
+  font-weight: var(--spectrum-font-weight-semibold);
+  color: var(--spectrum-color-text-secondary);
+}
+
+.detailRow dd {
+  margin: 0;
+  font-size: var(--spectrum-font-size-sm);
+  color: var(--spectrum-color-text-primary);
+  overflow-wrap: break-word;
+  min-width: 0;
+}
+
+.nlpHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spectrum-space-3);
+  margin-bottom: var(--spectrum-space-4);
+}
+
+/* ---- Dashboard NLP insights panel ---- */
+.themeCloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spectrum-space-2);
+}
+
+.themeCloudChip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--spectrum-space-2);
+  padding: var(--spectrum-space-1) var(--spectrum-space-3);
+  border-radius: var(--spectrum-radius-full);
+  background-color: var(--spectrum-color-info-light);
+  color: var(--spectrum-color-info-text);
+  font-size: var(--spectrum-font-size-sm);
+  font-weight: var(--spectrum-font-weight-medium);
+}
+
+.themeCloudCount {
+  font-size: var(--spectrum-font-size-xs);
+  font-weight: var(--spectrum-font-weight-bold);
+  opacity: 0.75;
+}
+
+.form {
+  max-width: 600px;
+}
+
+.form fieldset {
+  border: 1px solid var(--spectrum-color-neutral-200);
+  border-radius: var(--spectrum-radius-md);
+  padding: var(--spectrum-space-4);
+  margin-bottom: var(--spectrum-space-4);
+}
+
+.form legend {
+  font-weight: var(--spectrum-font-weight-semibold);
+  padding: 0 var(--spectrum-space-2);
+}
+
+.formField {
+  margin-bottom: var(--spectrum-space-4);
+}
+
+.formField label {
+  display: block;
+  font-size: var(--spectrum-font-size-sm);
+  font-weight: var(--spectrum-font-weight-medium);
+  color: var(--spectrum-color-text-primary);
+  margin-bottom: var(--spectrum-space-1);
+}
+
+/* --------------------------------------------------------------------------
+   Native form controls (date inputs, inline selects) — align with the
+   design-system Input/Select look so admin forms are visually consistent.
+   -------------------------------------------------------------------------- */
+.input,
+.select {
+  width: 100%;
+  max-width: 100%;
+  padding: var(--spectrum-space-2) var(--spectrum-space-3);
+  font-family: var(--spectrum-font-family);
+  font-size: var(--spectrum-font-size-base);
+  color: var(--spectrum-color-text-primary);
+  background-color: var(--spectrum-color-white);
+  border: 1px solid var(--spectrum-color-neutral-300);
+  border-radius: var(--spectrum-radius-md);
+  transition: border-color var(--spectrum-transition-fast) ease,
+    box-shadow var(--spectrum-transition-fast) ease;
+}
+
+.input:focus,
+.select:focus {
+  outline: none;
+  border-color: var(--spectrum-color-primary);
+  box-shadow: 0 0 0 3px rgba(0, 89, 184, 0.2);
+}
+
+/* Inline selects inside table action cells size to their content. */
+.select {
+  width: auto;
+  min-width: 180px;
+}

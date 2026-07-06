@@ -1,0 +1,39 @@
+# ─── Secrets / environment — NEVER commit ───────────────────────────────
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# ─── Python ──────────────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.hypothesis/
+.mypy_cache/
+.ruff_cache/
+
+# ─── Node / frontend ─────────────────────────────────────────────────────
+node_modules/
+dist/
+build/
+.vite/
+*.local
+
+# ─── Databases / data ────────────────────────────────────────────────────
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+
+# ─── OS / editor ─────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/

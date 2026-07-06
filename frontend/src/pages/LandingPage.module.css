@@ -1,0 +1,74 @@
+/* ==========================================================================
+   Landing Page — Spectrum UI Redesign
+   ==========================================================================
+   Composition styles for the landing page. Branding, colors, and form field
+   styling come from the Component_Library (Input, Textarea, Button, Card) and
+   Design_Tokens; this module only handles page-level layout, spacing, and the
+   page-entry fade-in animation.
+   ========================================================================== */
+
+/**
+ * Constrains the form content to a comfortable reading width (~65 characters,
+ * roughly 600px) and centers it within the NavigationShell content area
+ * (Requirement 12.5).
+ */
+.page {
+  max-width: 600px;
+  margin-inline: auto;
+  /* Fade-in on page entry, normal transition duration (Requirement 15.3). */
+  animation: fadeIn var(--spectrum-transition-normal) ease-in-out;
+}
+
+/**
+ * Page heading, centered within the Card (Requirement 8.1):
+ * 2xl font-size, weight 700.
+ */
+.title {
+  font-family: var(--spectrum-font-family);
+  font-size: var(--spectrum-font-size-2xl);
+  font-weight: var(--spectrum-font-weight-bold); /* 700 */
+  line-height: var(--spectrum-line-height-tight);
+  color: var(--spectrum-color-text-primary);
+  text-align: center;
+  margin: 0;
+}
+
+/**
+ * Instructional subtitle below the title in text-secondary color and base
+ * font-size (Requirement 8.5).
+ */
+.subtitle {
+  font-family: var(--spectrum-font-family);
+  font-size: var(--spectrum-font-size-base);
+  color: var(--spectrum-color-text-secondary);
+  text-align: center;
+  margin: var(--spectrum-space-2) 0 0;
+}
+
+/**
+ * Form fields stacked with consistent 16px spacing between them
+ * (Requirements 8.2, 12.4).
+ */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spectrum-space-4); /* 16px */
+  margin-top: var(--spectrum-space-6); /* 24px below the header card */
+}
+
+/* Standalone contact error (not tied to a single field). */
+.contactError {
+  font-family: var(--spectrum-font-family);
+  font-size: var(--spectrum-font-size-sm);
+  color: var(--spectrum-color-error);
+}
+
+/**
+ * Submit button: full width on viewports narrower than 768px (Requirement 8.3).
+ * On wider viewports it sizes to its content.
+ */
+@media (max-width: 767.98px) {
+  .submitButton {
+    width: 100%;
+  }
+}

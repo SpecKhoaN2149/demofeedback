@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nlp-feedback-processing"
+version = "0.1.0"
+description = "NLP enrichment layer that turns raw telecom customer feedback into structured, ranked insights using the Google Gemini API."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "google-genai",
+    "pydantic>=2",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=7.4",
+    "hypothesis>=6.100",
+]
+
+[tool.setuptools.packages.find]
+include = ["nlp_processing*"]
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-ra"

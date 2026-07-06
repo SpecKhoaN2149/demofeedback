@@ -1,0 +1,36 @@
+/**
+ * NavigationShell component styles.
+ * References Spectrum design tokens (var(--spectrum-*)) defined in tokens.css.
+ */
+
+.shell {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  min-height: 100vh;
+  font-family: var(--spectrum-font-family);
+  background-color: var(--spectrum-color-background);
+}
+
+/*
+ * Main content area.
+ * Because the Header is fixed-position, offset the content with a top padding
+ * equal to the header height (~64px) so content is not obscured.
+ */
+.main {
+  padding-top: var(--spectrum-space-16); /* ~64px header offset */
+}
+
+.content {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  /* Mobile: 16px horizontal padding */
+  padding: var(--spectrum-space-6) var(--spectrum-space-4);
+}
+
+/* Desktop: 32px horizontal padding (>= 768px) */
+@media (min-width: 768px) {
+  .content {
+    padding: var(--spectrum-space-8) var(--spectrum-space-8);
+  }
+}

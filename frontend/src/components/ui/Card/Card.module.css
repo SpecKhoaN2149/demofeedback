@@ -1,0 +1,37 @@
+/**
+ * Card component styles.
+ * References Spectrum design tokens (var(--spectrum-*)) defined in tokens.css.
+ */
+
+/* Base: white background, medium radius, medium shadow, 24px padding
+   (Requirements 5.1, 5.2) */
+.card {
+  background-color: var(--spectrum-color-white);
+  border-radius: var(--spectrum-radius-md);
+  box-shadow: var(--spectrum-shadow-md);
+  padding: var(--spectrum-space-6); /* 24px */
+  transition: box-shadow var(--spectrum-transition-normal) ease-in-out,
+    transform var(--spectrum-transition-normal) ease-in-out;
+}
+
+/* Interactive: hover lifts shadow to large + scale(1.02), keyboard focus ring
+   (Requirement 5.3) */
+.interactive {
+  cursor: pointer;
+}
+
+.interactive:hover {
+  box-shadow: var(--spectrum-shadow-lg);
+  transform: scale(1.02);
+}
+
+.interactive:focus-visible {
+  outline: 2px solid var(--spectrum-color-primary);
+  outline-offset: 2px;
+}
+
+/* Bordered: 1px solid neutral-200 border, no shadow (Requirement 5.4) */
+.bordered {
+  border: 1px solid var(--spectrum-color-neutral-200);
+  box-shadow: none;
+}

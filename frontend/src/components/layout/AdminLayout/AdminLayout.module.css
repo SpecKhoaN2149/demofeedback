@@ -1,0 +1,72 @@
+/**
+ * AdminLayout component styles.
+ * References Spectrum design tokens (var(--spectrum-*)) defined in tokens.css.
+ *
+ * Desktop (>= 1024px): CSS grid with a fixed 240px sidebar column and a
+ * flexible content column (Requirement 11.1).
+ * Tablet and below (< 1024px): single-column grid; the sidebar becomes a
+ * horizontal, scrollable tab bar below the header (Requirement 11.2).
+ */
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  font-family: var(--spectrum-font-family);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  align-items: start;
+  flex: 1 1 auto;
+  min-height: 0;
+  font-family: var(--spectrum-font-family);
+}
+
+.sidebar {
+  /* On desktop the sidebar keeps AdminSidebar's own fixed 240px width and
+     vertical link stack. It fills the grid column height. */
+  align-self: stretch;
+}
+
+.content {
+  padding: var(--spectrum-space-6);
+  min-width: 0; /* Allow content to shrink instead of forcing horizontal overflow. */
+}
+
+/* Tablet and below: collapse to a single column with a horizontal tab bar. */
+@media (max-width: 1023.98px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  /* Reflow the sidebar into a full-width, horizontally scrollable tab bar.
+     Element selectors target AdminSidebar's internal markup (nav > ul > li > a)
+     which is not scoped to AdminSidebar's CSS module. */
+  .sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--spectrum-color-neutral-200);
+    padding: var(--spectrum-space-2) var(--spectrum-space-2);
+    overflow-x: auto;
+  }
+
+  .sidebar ul {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: var(--spectrum-space-1);
+  }
+
+  .sidebar li {
+    flex: 0 0 auto;
+  }
+
+  .sidebar a {
+    white-space: nowrap;
+  }
+
+  .content {
+    padding: var(--spectrum-space-4);
+  }
+}

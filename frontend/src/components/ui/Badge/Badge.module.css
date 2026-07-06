@@ -1,0 +1,50 @@
+/**
+ * Badge component styles.
+ * References Spectrum design tokens (var(--spectrum-*)) defined in tokens.css.
+ * Pill shape via radius-full, 4px/8px padding, xs font-size, weight 600.
+ * Each color maps to its semantic token: the light variant background paired
+ * with the semantic color text for accessible contrast (Requirement 7.4, 7.5).
+ */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spectrum-space-1) var(--spectrum-space-2); /* 4px / 8px */
+  border-radius: var(--spectrum-radius-full);
+  font-family: var(--spectrum-font-family);
+  font-size: var(--spectrum-font-size-xs);
+  font-weight: var(--spectrum-font-weight-semibold); /* 600 */
+  line-height: var(--spectrum-line-height-tight);
+  white-space: nowrap;
+}
+
+/* Success (green) */
+.success {
+  background-color: var(--spectrum-color-success-light);
+  color: var(--spectrum-color-success-text);
+}
+
+/* Warning (amber) */
+.warning {
+  background-color: var(--spectrum-color-warning-light);
+  color: var(--spectrum-color-warning-text);
+}
+
+/* Error (red) */
+.error {
+  background-color: var(--spectrum-color-error-light);
+  color: var(--spectrum-color-error-text);
+}
+
+/* Info (blue) */
+.info {
+  background-color: var(--spectrum-color-info-light);
+  color: var(--spectrum-color-info-text);
+}
+
+/* Neutral (grey) */
+.neutral {
+  background-color: var(--spectrum-color-neutral-200);
+  color: var(--spectrum-color-neutral-700);
+}
