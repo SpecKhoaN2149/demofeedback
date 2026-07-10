@@ -10,19 +10,19 @@ import styles from './StatusLookup.module.css'
  * Status lookup page (route: /status).
  *
  * Provides an entry point for the header "Track Status" link. Customers enter
- * the submission ID they received after submitting feedback and are routed to
+ * the feedback ID they received after submitting feedback and are routed to
  * the live StatusTracker at /status/:id.
  */
 export default function StatusLookup() {
   const navigate = useNavigate()
-  const [submissionId, setSubmissionId] = useState('')
+  const [feedbackId, setFeedbackId] = useState('')
   const [error, setError] = useState<string | undefined>(undefined)
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
-    const trimmed = submissionId.trim()
+    const trimmed = feedbackId.trim()
     if (trimmed.length === 0) {
-      setError('Please enter your submission ID.')
+      setError('Please enter your feedback ID.')
       return
     }
     setError(undefined)
@@ -33,19 +33,19 @@ export default function StatusLookup() {
     <NavigationShell>
       <div className={styles.page}>
         <Card>
-          <h1 className={styles.title}>Track your submission</h1>
+          <h1 className={styles.title}>Track your feedback</h1>
           <p className={styles.subtitle}>
-            Enter the submission ID you received when you sent us your feedback.
+            Enter the feedback ID you received when you sent us your feedback.
           </p>
         </Card>
 
         <form className={styles.form} onSubmit={handleSubmit} noValidate>
           <Input
-            id="submission-id"
-            label="Submission ID"
+            id="feedback-id"
+            label="Feedback ID"
             type="text"
-            value={submissionId}
-            onChange={(e) => setSubmissionId(e.target.value)}
+            value={feedbackId}
+            onChange={(e) => setFeedbackId(e.target.value)}
             error={error}
             helpText="Looks like a series of letters and numbers, e.g. abc-123."
           />

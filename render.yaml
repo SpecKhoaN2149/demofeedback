@@ -1,0 +1,29 @@
+# Render Blueprint — single always-on web service that serves both the API and
+# the built dashboard, with a persistent disk for the SQLite database.
+# Docs: https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: spectrum-feedback
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter            # always-on; "free" instances sleep when idle
+    healthCheckPath: /health
+    autoDeploy: true
+    disk:
+      name: data
+      mountPath: /data       # SQLite DB persists here across deploys/restarts
+      sizeGB: 1
+    envVars:
+      # Where the SQLite database file lives (on the persistent disk above).
+      - key: SUBMISSIONS_DB_PATH
+        value: /data/submissions.db
+      # Gemini model priority (matches local defaults).
+      - key: GEMINI_MODEL_PRIORITY
+        value: gemini-3.1-flash-lite,gemini-2.5-flash-lite,gemini-2.5-flash
+      # Secrets — set these values in the Render dashboard, not in git.
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: ADMIN_USERNAME
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false

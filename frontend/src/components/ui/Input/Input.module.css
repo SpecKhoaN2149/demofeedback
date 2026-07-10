@@ -18,7 +18,7 @@
   color: var(--spectrum-color-text-primary);
   background-color: var(--spectrum-color-white);
   border: 1px solid var(--spectrum-color-neutral-300);
-  border-radius: var(--spectrum-radius-sm);
+  border-radius: var(--spectrum-radius-md);
   padding: var(--spectrum-space-3) var(--spectrum-space-4); /* 12px vertical / 16px horizontal */
   width: 100%;
   transition: border-color var(--spectrum-transition-fast) ease-in-out,

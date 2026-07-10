@@ -18,17 +18,96 @@
    (Requirements 10.1, 10.5). */
 .card {
   width: 100%;
-  max-width: 600px;
-  text-align: center;
+  max-width: 620px;
+  text-align: left;
   display: flex;
   flex-direction: column;
-  gap: var(--spectrum-space-4);
+  gap: var(--spectrum-space-5);
+}
+
+/* Header row: title + feedback ID chip. */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spectrum-space-3);
+  flex-wrap: wrap;
 }
 
 .title {
   font-size: var(--spectrum-font-size-2xl);
   font-weight: var(--spectrum-font-weight-bold);
   color: var(--spectrum-color-text-primary);
+  margin: 0;
+}
+
+.idChip {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: var(--spectrum-font-size-xs);
+  font-weight: var(--spectrum-font-weight-semibold);
+  color: var(--spectrum-color-text-secondary);
+  background-color: var(--spectrum-color-surface);
+  border: 1px solid var(--spectrum-color-card-border);
+  border-radius: var(--spectrum-radius-full);
+  padding: 4px 12px;
+}
+
+/* Status hero banner. */
+.hero {
+  display: flex;
+  align-items: center;
+  gap: var(--spectrum-space-4);
+  padding: var(--spectrum-space-4) var(--spectrum-space-5);
+  border-radius: var(--spectrum-radius-lg);
+  border: 1px solid var(--spectrum-color-card-border);
+}
+
+.heroPending {
+  background: linear-gradient(135deg, #eef5ff 0%, #eafaf3 100%);
+}
+
+.heroDone {
+  background: linear-gradient(135deg, #eafaf1 0%, #e9f5ff 100%);
+}
+
+.heroIcon {
+  font-size: 1.9rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.heroText {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.heroTitle {
+  margin: 0;
+  font-size: var(--spectrum-font-size-lg);
+  font-weight: var(--spectrum-font-weight-semibold);
+  color: var(--spectrum-color-text-primary);
+  line-height: var(--spectrum-line-height-tight);
+}
+
+.heroSubtitle {
+  margin: var(--spectrum-space-1) 0 0;
+  font-size: var(--spectrum-font-size-sm);
+  color: var(--spectrum-color-text-secondary);
+}
+
+/* Content sections. */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spectrum-space-3);
+}
+
+.sectionHeading {
+  font-size: var(--spectrum-font-size-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--spectrum-color-text-secondary);
   margin: 0;
 }
 
@@ -73,4 +152,188 @@
   .retryWrapper button {
     width: 100%;
   }
+}
+
+/* Row wrapping the enrichment status badge, centered under the title. */
+.badgeRow {
+  display: flex;
+  justify-content: center;
+}
+
+/* Triage outcome line. */
+.triage {
+  font-size: var(--spectrum-font-size-md);
+  color: var(--spectrum-color-text-secondary);
+  margin: 0;
+}
+
+/* Linked ticket status row: label + badge, centered. */
+.ticketRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spectrum-space-2);
+}
+
+.ticketLabel {
+  font-size: var(--spectrum-font-size-md);
+  font-weight: var(--spectrum-font-weight-medium);
+  color: var(--spectrum-color-text-primary);
+}
+
+/* Comments panel. */
+.comments {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spectrum-space-3);
+}
+
+.commentsHeading {
+  font-size: var(--spectrum-font-size-lg);
+  font-weight: var(--spectrum-font-weight-semibold);
+  color: var(--spectrum-color-text-primary);
+  margin: 0;
+}
+
+.emptyComments {
+  font-size: var(--spectrum-font-size-md);
+  color: var(--spectrum-color-text-secondary);
+  margin: 0;
+}
+
+.commentList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spectrum-space-3);
+}
+
+.comment {
+  border: 1px solid var(--spectrum-color-neutral-200);
+  border-radius: var(--spectrum-radius-md);
+  padding: var(--spectrum-space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spectrum-space-1);
+}
+
+.commentMeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--spectrum-space-2);
+}
+
+.commentAuthor {
+  font-weight: var(--spectrum-font-weight-semibold);
+  color: var(--spectrum-color-text-primary);
+  font-size: var(--spectrum-font-size-sm);
+}
+
+.commentTime {
+  font-size: var(--spectrum-font-size-xs);
+  color: var(--spectrum-color-text-secondary);
+}
+
+.commentText {
+  font-size: var(--spectrum-font-size-md);
+  color: var(--spectrum-color-text-primary);
+  line-height: var(--spectrum-line-height-normal);
+  margin: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Progress flow (vertical stepper)
+   -------------------------------------------------------------------------- */
+.steps {
+  list-style: none;
+  margin: var(--spectrum-space-2) 0;
+  padding: 0;
+  text-align: left;
+}
+
+.step {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spectrum-space-3);
+  padding-bottom: var(--spectrum-space-4);
+}
+
+/* Connector line between markers. */
+.step:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  left: 13px;
+  top: 26px;
+  bottom: -2px;
+  width: 2px;
+  background-color: var(--spectrum-color-neutral-300);
+}
+
+.stepDone:not(:last-child)::before {
+  background-color: var(--spectrum-color-success);
+}
+
+.stepMarker {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--spectrum-font-size-sm);
+  font-weight: var(--spectrum-font-weight-bold);
+  border: 2px solid var(--spectrum-color-neutral-300);
+  background-color: var(--spectrum-color-white);
+  color: var(--spectrum-color-text-secondary);
+  z-index: 1;
+}
+
+.stepDone .stepMarker {
+  background-color: var(--spectrum-color-success);
+  border-color: var(--spectrum-color-success);
+  color: var(--spectrum-color-white);
+}
+
+.stepActive .stepMarker {
+  border-color: var(--spectrum-color-primary);
+  color: var(--spectrum-color-primary);
+  box-shadow: 0 0 0 4px rgba(0, 89, 184, 0.15);
+}
+
+/* Pulsing dot for the active step marker. */
+.stepActive .stepMarker::after {
+  content: '';
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background-color: var(--spectrum-color-primary);
+}
+
+.stepBody {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 2px;
+}
+
+.stepLabel {
+  font-size: var(--spectrum-font-size-md);
+  font-weight: var(--spectrum-font-weight-semibold);
+  color: var(--spectrum-color-text-primary);
+}
+
+.stepUpcoming .stepLabel {
+  color: var(--spectrum-color-text-secondary);
+  font-weight: var(--spectrum-font-weight-medium);
+}
+
+.stepHint {
+  font-size: var(--spectrum-font-size-sm);
+  color: var(--spectrum-color-text-secondary);
 }

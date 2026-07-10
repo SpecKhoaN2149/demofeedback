@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { getSubmissionStatus, StatusResponse } from '../api/client'
+import { getFeedbackStatus, FeedbackStatus } from '../api/client'
 
 /** Polling configuration constants */
 const INITIAL_INTERVAL_MS = 5000
@@ -9,12 +9,28 @@ const BACKOFF_BASE_MS = 5000
 const BACKOFF_MAX_MS = 60000
 const MAX_CONSECUTIVE_FAILURES = 10
 
+/** Enrichment states that represent a terminal (no longer "in progress") result. */
+const TERMINAL_ENRICHMENT_STATES: ReadonlyArray<FeedbackStatus['enrichment_status']> = [
+  'completed',
+  'failed',
+  'timeout',
+]
+
 export interface UsePollingResult {
-  status: StatusResponse | null
+  status: FeedbackStatus | null
   error: Error | null
   isComplete: boolean
   connectionLost: boolean
   retry: () => void
+}
+
+/**
+ * Determines whether a feedback status represents a terminal enrichment state.
+ * Polling stops once enrichment has reached completed/failed/timeout. Exported
+ * for testing and reuse by the render layer.
+ */
+export function isTerminalStatus(status: FeedbackStatus): boolean {
+  return TERMINAL_ENRICHMENT_STATES.includes(status.enrichment_status)
 }
 
 /**
@@ -37,20 +53,21 @@ function clampInterval(interval: number): number {
 }
 
 /**
- * Custom hook for polling submission status with exponential backoff.
+ * Custom hook for polling feedback status with exponential backoff.
  *
  * - Starts polling immediately on mount
- * - Calls getSubmissionStatus(id) at each interval
+ * - Calls getFeedbackStatus(id) at each interval
  * - On success: resets failure count, stores status
  * - On failure: increments failure count, applies exponential backoff
- * - Stops polling when progress_state === 100 or after 10 consecutive failures
+ * - Stops polling once enrichment reaches a terminal state (completed/failed/
+ *   timeout) or after 10 consecutive failures
  * - Exposes a manual retry() function to restart after connection lost
  * - Cleans up interval on unmount
  *
- * Requirements: 12.1, 12.3, 12.4, 12.5
+ * Requirements: 8.1, 8.2, 9.1, 9.2, 9.4
  */
-export function usePolling(submissionId: string | null): UsePollingResult {
-  const [status, setStatus] = useState<StatusResponse | null>(null)
+export function usePolling(feedbackId: string | null): UsePollingResult {
+  const [status, setStatus] = useState<FeedbackStatus | null>(null)
   const [error, setError] = useState<Error | null>(null)
   const [isComplete, setIsComplete] = useState(false)
   const [connectionLost, setConnectionLost] = useState(false)
@@ -75,10 +92,10 @@ export function usePolling(submissionId: string | null): UsePollingResult {
   }, [clearTimer])
 
   const poll = useCallback(async () => {
-    if (!submissionId || !mountedRef.current) return
+    if (!feedbackId || !mountedRef.current) return
 
     try {
-      const response = await getSubmissionStatus(submissionId)
+      const response = await getFeedbackStatus(feedbackId)
 
       if (!mountedRef.current) return
 
@@ -88,8 +105,8 @@ export function usePolling(submissionId: string | null): UsePollingResult {
       setError(null)
       setConnectionLost(false)
 
-      // Stop polling when progress reaches 100%
-      if (response.progress_state === 100) {
+      // Stop polling once enrichment has reached a terminal state
+      if (isTerminalStatus(response)) {
         setIsComplete(true)
         clearTimer()
         return
@@ -116,13 +133,13 @@ export function usePolling(submissionId: string | null): UsePollingResult {
       const backoffInterval = computeBackoff(currentFailures)
       scheduleNext(backoffInterval)
     }
-  }, [submissionId, clearTimer, scheduleNext])
+  }, [feedbackId, clearTimer, scheduleNext])
 
   // Keep pollRef in sync with the latest poll function
   pollRef.current = poll
 
   const startPolling = useCallback(() => {
-    if (!submissionId) return
+    if (!feedbackId) return
 
     // Reset state for a fresh start
     failureCountRef.current = 0
@@ -132,18 +149,18 @@ export function usePolling(submissionId: string | null): UsePollingResult {
 
     // Poll immediately
     pollRef.current()
-  }, [submissionId])
+  }, [feedbackId])
 
   /** Manual retry function to restart polling after connection lost */
   const retry = useCallback(() => {
     startPolling()
   }, [startPolling])
 
-  // Start polling on mount / when submissionId changes
+  // Start polling on mount / when feedbackId changes
   useEffect(() => {
     mountedRef.current = true
 
-    if (submissionId) {
+    if (feedbackId) {
       startPolling()
     }
 
@@ -151,7 +168,7 @@ export function usePolling(submissionId: string | null): UsePollingResult {
       mountedRef.current = false
       clearTimer()
     }
-  }, [submissionId, startPolling, clearTimer])
+  }, [feedbackId, startPolling, clearTimer])
 
   return {
     status,

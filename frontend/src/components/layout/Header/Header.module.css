@@ -9,7 +9,7 @@
   left: 0;
   right: 0;
   z-index: 100;
-  background-color: var(--spectrum-color-secondary); /* Spectrum Dark Navy */
+  background: var(--spectrum-gradient-brand); /* blue → teal → green */
   box-shadow: var(--spectrum-shadow-sm);
   font-family: var(--spectrum-font-family);
 }

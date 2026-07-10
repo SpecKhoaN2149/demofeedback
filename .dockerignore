@@ -1,0 +1,21 @@
+# Keep the build context small and avoid shipping local state/secrets.
+.git
+.venv
+**/.venv
+**/__pycache__
+**/*.pyc
+.pytest_cache
+.hypothesis
+node_modules
+frontend/node_modules
+frontend/dist
+backend/.env
+backend/submissions.db
+backend/submissions.db-wal
+backend/submissions.db-shm
+*.db
+*.db-wal
+*.db-shm
+.vscode
+tests
+backend/tests

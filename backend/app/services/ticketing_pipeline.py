@@ -1,22 +1,24 @@
-"""TicketingPipeline service for managing support tickets from negative submissions."""
+"""TicketingPipeline service for managing independent support tickets.
+
+Tickets are their own entities (`tickets` table, keyed by `ticket_id`). The
+link between feedback and a ticket lives on the feedback side
+(`feedback.ticket_id`), so a ticket may have many feedback records linked to
+it (many-to-one). Ticket status follows the state machine
+open -> in_progress -> resolved and is surfaced to customers via the feedback
+status view rather than by mutating legacy submission tables.
+"""
 
 import uuid
 from datetime import datetime, timezone
 
 from app.database import get_connection
-from app.models.ticket import Ticket
+from app.models.ticket import Ticket, TicketDetail, TicketWithCount
 
 
-# Valid status transitions: current_status → next_status
+# Valid status transitions: current_status -> next_status
 _VALID_TRANSITIONS: dict[str, str] = {
     "open": "in_progress",
     "in_progress": "resolved",
-}
-
-# Progress state associated with each ticket status transition target
-_STATUS_PROGRESS_MAP: dict[str, int] = {
-    "in_progress": 75,
-    "resolved": 100,
 }
 
 
@@ -25,23 +27,43 @@ def _utcnow_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-class TicketingPipeline:
-    """Manages support tickets for negative-sentiment submissions.
+def _ticket_from_row(row) -> Ticket:
+    """Build a Ticket model from a `tickets` table row."""
+    return Ticket(
+        ticket_id=uuid.UUID(row["ticket_id"]),
+        issue_category=row["issue_category"],
+        description=row["description"],
+        priority=row["priority"],
+        status=row["status"],
+        created_at=datetime.fromisoformat(row["created_at"]),
+    )
 
-    Creates high-priority tickets linked to submissions and enforces the
-    status transition state machine: open → in_progress → resolved.
-    When a ticket advances, the linked submission's progress state is updated.
+
+class TicketingPipeline:
+    """Manages independent support tickets and their feedback linkage.
+
+    Creates high-priority tickets, links feedback records to them, and enforces
+    the status transition state machine: open -> in_progress -> resolved.
     """
 
     def create_ticket(
-        self, submission_id: str, category: str, description: str
+        self,
+        *,
+        feedback_id: str,
+        issue_category: str,
+        description: str,
+        priority: str = "high",
     ) -> Ticket:
-        """Create a new high-priority ticket linked to a submission.
+        """Create a new ticket and link the originating feedback to it.
+
+        Inserts a new `tickets` row (status 'open') and sets
+        `feedback.ticket_id` on the originating feedback record.
 
         Args:
-            submission_id: UUID string of the linked submission.
-            category: Issue category from the predefined set.
+            feedback_id: UUID string of the feedback that triggered the ticket.
+            issue_category: Issue category for the ticket.
             description: Detailed description of the issue (max 5000 chars).
+            priority: Ticket priority (defaults to 'high').
 
         Returns:
             The created Ticket model instance.
@@ -52,38 +74,65 @@ class TicketingPipeline:
         with get_connection() as conn:
             conn.execute(
                 """
-                INSERT INTO tickets (id, submission_id, issue_category, description, priority, status, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO tickets (ticket_id, issue_category, description, priority, status, created_at)
+                VALUES (?, ?, ?, ?, ?, ?)
                 """,
                 (
                     ticket_id,
-                    submission_id,
-                    category,
+                    issue_category,
                     description,
-                    "high",
+                    priority,
                     "open",
                     created_at,
                 ),
             )
+            conn.execute(
+                "UPDATE feedback SET ticket_id = ? WHERE feedback_id = ?",
+                (ticket_id, feedback_id),
+            )
             conn.commit()
 
         return Ticket(
-            id=uuid.UUID(ticket_id),
-            submission_id=uuid.UUID(submission_id),
-            issue_category=category,
+            ticket_id=uuid.UUID(ticket_id),
+            issue_category=issue_category,
             description=description,
-            priority="high",
+            priority=priority,
             status="open",
             created_at=datetime.fromisoformat(created_at),
         )
 
+    def link_feedback(self, ticket_id: str, feedback_id: str) -> None:
+        """Link a feedback record to an existing ticket.
+
+        Succeeds for any valid ticket regardless of how many feedback records
+        are already linked (including zero).
+
+        Args:
+            ticket_id: UUID string of the target ticket.
+            feedback_id: UUID string of the feedback to link.
+
+        Raises:
+            ValueError: If the ticket does not exist.
+        """
+        with get_connection() as conn:
+            row = conn.execute(
+                "SELECT ticket_id FROM tickets WHERE ticket_id = ?", (ticket_id,)
+            ).fetchone()
+            if row is None:
+                raise ValueError(f"Ticket not found: {ticket_id}")
+
+            conn.execute(
+                "UPDATE feedback SET ticket_id = ? WHERE feedback_id = ?",
+                (ticket_id, feedback_id),
+            )
+            conn.commit()
+
     def advance_status(self, ticket_id: str) -> Ticket:
         """Advance a ticket to the next valid status.
 
-        Enforces the state machine: open → in_progress → resolved.
-        Updates the linked submission's progress state accordingly:
-        - in_progress → submission progress 75%
-        - resolved → submission progress 100%
+        Enforces the state machine: open -> in_progress -> resolved. The new
+        status is surfaced to customers through the feedback status view; no
+        legacy submission/state_transition rows are touched.
 
         Args:
             ticket_id: UUID string of the ticket to advance.
@@ -97,7 +146,7 @@ class TicketingPipeline:
         """
         with get_connection() as conn:
             row = conn.execute(
-                "SELECT * FROM tickets WHERE id = ?", (ticket_id,)
+                "SELECT * FROM tickets WHERE ticket_id = ?", (ticket_id,)
             ).fetchone()
 
             if row is None:
@@ -111,40 +160,14 @@ class TicketingPipeline:
                     f"Invalid status transition: cannot advance from '{current_status}'"
                 )
 
-            # Update ticket status
             conn.execute(
-                "UPDATE tickets SET status = ? WHERE id = ?",
+                "UPDATE tickets SET status = ? WHERE ticket_id = ?",
                 (new_status, ticket_id),
             )
-
-            # Update linked submission progress state
-            submission_id = row["submission_id"]
-            new_progress = _STATUS_PROGRESS_MAP[new_status]
-            previous_progress = conn.execute(
-                "SELECT progress_state FROM submissions WHERE id = ?",
-                (submission_id,),
-            ).fetchone()["progress_state"]
-
-            conn.execute(
-                "UPDATE submissions SET progress_state = ? WHERE id = ?",
-                (new_progress, submission_id),
-            )
-
-            # Record state transition on the submission
-            transition_timestamp = _utcnow_iso()
-            conn.execute(
-                """
-                INSERT INTO state_transitions (submission_id, previous_state, new_state, timestamp)
-                VALUES (?, ?, ?, ?)
-                """,
-                (submission_id, previous_progress, new_progress, transition_timestamp),
-            )
-
             conn.commit()
 
         return Ticket(
-            id=uuid.UUID(row["id"]),
-            submission_id=uuid.UUID(row["submission_id"]),
+            ticket_id=uuid.UUID(row["ticket_id"]),
             issue_category=row["issue_category"],
             description=row["description"],
             priority=row["priority"],
@@ -152,33 +175,58 @@ class TicketingPipeline:
             created_at=datetime.fromisoformat(row["created_at"]),
         )
 
-    def list_active(self) -> list[Ticket]:
-        """Return all tickets with status 'open' or 'in_progress', ordered by created_at ascending.
+    def list_with_counts(
+        self, statuses: tuple[str, ...] | None = None
+    ) -> list[TicketWithCount]:
+        """Return tickets with their linked feedback counts, optionally filtered.
+
+        Each result carries `linked_feedback_count`, the number of feedback
+        records whose `ticket_id` points at the ticket. Ordered by created_at
+        ascending.
+
+        Args:
+            statuses: When provided, only tickets whose status is in this set
+                are returned. When None, all tickets are returned.
 
         Returns:
-            List of Ticket model instances for active tickets.
+            List of TicketWithCount model instances.
         """
+        where = ""
+        params: list = []
+        if statuses:
+            placeholders = ",".join("?" for _ in statuses)
+            where = f"WHERE t.status IN ({placeholders})"
+            params = list(statuses)
+
         with get_connection() as conn:
             rows = conn.execute(
-                """
-                SELECT * FROM tickets
-                WHERE status IN ('open', 'in_progress')
-                ORDER BY created_at ASC
+                f"""
+                SELECT t.*,
+                       (SELECT COUNT(*) FROM feedback f WHERE f.ticket_id = t.ticket_id)
+                           AS linked_feedback_count
+                FROM tickets t
+                {where}
+                ORDER BY t.created_at ASC
                 """,
+                params,
             ).fetchall()
 
         return [
-            Ticket(
-                id=uuid.UUID(row["id"]),
-                submission_id=uuid.UUID(row["submission_id"]),
+            TicketWithCount(
+                ticket_id=uuid.UUID(row["ticket_id"]),
                 issue_category=row["issue_category"],
                 description=row["description"],
                 priority=row["priority"],
                 status=row["status"],
                 created_at=datetime.fromisoformat(row["created_at"]),
+                linked_feedback_count=row["linked_feedback_count"],
             )
             for row in rows
         ]
+
+    def list_active_with_counts(self) -> list[TicketWithCount]:
+        """Return active (open/in_progress) tickets with linked feedback counts."""
+        return self.list_with_counts(("open", "in_progress"))
 
     def get_ticket(self, ticket_id: str) -> Ticket | None:
         """Retrieve a single ticket by ID.
@@ -191,18 +239,42 @@ class TicketingPipeline:
         """
         with get_connection() as conn:
             row = conn.execute(
-                "SELECT * FROM tickets WHERE id = ?", (ticket_id,)
+                "SELECT * FROM tickets WHERE ticket_id = ?", (ticket_id,)
             ).fetchone()
 
         if row is None:
             return None
 
-        return Ticket(
-            id=uuid.UUID(row["id"]),
-            submission_id=uuid.UUID(row["submission_id"]),
+        return _ticket_from_row(row)
+
+    def get_with_feedback_ids(self, ticket_id: str) -> TicketDetail | None:
+        """Retrieve a ticket along with the ids of all linked feedback.
+
+        Args:
+            ticket_id: UUID string of the ticket to retrieve.
+
+        Returns:
+            A TicketDetail model instance, or None if the ticket is not found.
+        """
+        with get_connection() as conn:
+            row = conn.execute(
+                "SELECT * FROM tickets WHERE ticket_id = ?", (ticket_id,)
+            ).fetchone()
+
+            if row is None:
+                return None
+
+            feedback_rows = conn.execute(
+                "SELECT feedback_id FROM feedback WHERE ticket_id = ? ORDER BY created_at ASC",
+                (ticket_id,),
+            ).fetchall()
+
+        return TicketDetail(
+            ticket_id=uuid.UUID(row["ticket_id"]),
             issue_category=row["issue_category"],
             description=row["description"],
             priority=row["priority"],
             status=row["status"],
             created_at=datetime.fromisoformat(row["created_at"]),
+            feedback_ids=[uuid.UUID(fr["feedback_id"]) for fr in feedback_rows],
         )

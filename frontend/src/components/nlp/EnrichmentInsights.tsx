@@ -15,6 +15,8 @@ export interface EnrichmentInsightsProps {
   data: EnrichmentInsightsData | EnrichmentSummary | null
   /** Compact mode renders a condensed view suited to table cells. */
   compact?: boolean
+  /** Hide the legacy 1–5 severity block (when a 1–10 severity is shown elsewhere). */
+  hideSeverity?: boolean
 }
 
 const MAX_SEVERITY = 5
@@ -40,6 +42,7 @@ function severityDotClass(index: number, score: number): string {
 export default function EnrichmentInsights({
   data,
   compact = false,
+  hideSeverity = false,
 }: EnrichmentInsightsProps) {
   if (!data) return null
 
@@ -98,7 +101,7 @@ export default function EnrichmentInsights({
         )}
       </div>
 
-      {severity != null && (
+      {!hideSeverity && severity != null && (
         <div className={styles.section}>
           <p className={styles.label}>Severity</p>
           <div className={styles.severityRow}>

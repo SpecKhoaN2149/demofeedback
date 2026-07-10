@@ -1,17 +1,56 @@
 /**
  * AdminSidebar component styles.
  * References Spectrum design tokens (var(--spectrum-*)) defined in tokens.css.
- * Fixed 240px width on desktop with active link highlighting using Spectrum
- * Blue background + white text (Requirement 11.1).
+ *
+ * Collapsible between a 240px labeled rail and a 64px icon-only rail. Active
+ * links use a soft blue tint + inset accent bar (Requirement 11.1).
  */
 
 .sidebar {
   width: 240px;
   flex-shrink: 0;
-  background-color: var(--spectrum-color-surface);
+  background-color: var(--spectrum-color-white);
   border-right: 1px solid var(--spectrum-color-neutral-200);
-  padding: var(--spectrum-space-4) 0;
+  padding: var(--spectrum-space-3) 0 var(--spectrum-space-5);
   font-family: var(--spectrum-font-family);
+  transition: width var(--spectrum-transition-normal) ease;
+}
+
+.sidebar.collapsed {
+  width: 64px;
+}
+
+/* Collapse/expand control. */
+.toggle {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  margin: 0 var(--spectrum-space-4) var(--spectrum-space-3) auto;
+  border: 1px solid var(--spectrum-color-card-border);
+  border-radius: var(--spectrum-radius-md);
+  background-color: var(--spectrum-color-white);
+  color: var(--spectrum-color-text-secondary);
+  cursor: pointer;
+  transition: background-color var(--spectrum-transition-fast) ease,
+    color var(--spectrum-transition-fast) ease;
+}
+
+.toggle:hover {
+  background-color: var(--spectrum-color-info-light);
+  color: var(--spectrum-color-primary);
+}
+
+.toggle:focus-visible {
+  outline: 2px solid var(--spectrum-color-primary);
+  outline-offset: 2px;
+}
+
+.collapsed .toggle {
+  margin-right: auto;
+  margin-left: auto;
 }
 
 .list {
@@ -24,7 +63,9 @@
 }
 
 .link {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: var(--spectrum-space-3);
   padding: var(--spectrum-space-3) var(--spectrum-space-4);
   margin: 0 var(--spectrum-space-2);
   border-radius: var(--spectrum-radius-md);
@@ -32,12 +73,15 @@
   font-size: var(--spectrum-font-size-base);
   font-weight: var(--spectrum-font-weight-medium);
   text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
   transition: background-color var(--spectrum-transition-fast) ease,
     color var(--spectrum-transition-fast) ease;
 }
 
 .link:hover {
-  background-color: var(--spectrum-color-neutral-200);
+  background-color: var(--spectrum-color-info-light);
+  color: var(--spectrum-color-primary);
 }
 
 .link:focus-visible {
@@ -45,9 +89,68 @@
   outline-offset: 2px;
 }
 
-/* Active link: Spectrum Blue background, white text */
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.label {
+  flex: 1 1 auto;
+  transition: opacity var(--spectrum-transition-fast) ease;
+}
+
+/* Numeric count pill (expanded rail). */
+.badge {
+  flex-shrink: 0;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--spectrum-radius-full);
+  background-color: var(--spectrum-color-primary);
+  color: var(--spectrum-color-white);
+  font-size: 11px;
+  font-weight: var(--spectrum-font-weight-bold);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+/* Small dot indicator shown on the icon in the collapsed rail. */
+.icon {
+  position: relative;
+}
+
+.badgeDot {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background-color: var(--spectrum-color-primary);
+  border: 2px solid var(--spectrum-color-white);
+}
+
+/* Collapsed rail: center the icon and hide the label. */
+.collapsed .link {
+  justify-content: center;
+  margin: 0 var(--spectrum-space-2);
+  padding: var(--spectrum-space-3);
+}
+
+.collapsed .label {
+  display: none;
+}
+
+/* Active link: soft blue tint, primary text, inset left accent bar. */
 .active,
 .active:hover {
-  background-color: var(--spectrum-color-primary);
-  color: var(--spectrum-color-text-inverse);
+  background-color: var(--spectrum-color-info-light);
+  color: var(--spectrum-color-primary);
+  font-weight: var(--spectrum-font-weight-semibold);
+  box-shadow: inset 3px 0 0 0 var(--spectrum-color-primary);
 }

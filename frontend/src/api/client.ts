@@ -7,35 +7,69 @@ const BASE_URL = '/api'
 
 // ─── Response / Request Types ────────────────────────────────────────────────
 
-export interface SubmissionCreatePayload {
-  customer_name: string
-  email?: string | null
-  phone?: string | null
-  core_request: string
-  sentiment: 'negative' | 'positive' | 'neutral'
-  // Negative-specific
-  issue_category?: string | null
-  detailed_description?: string | null
-  // Positive-specific
-  praise_text?: string | null
-  social_sharing?: boolean
-  // Neutral-specific
-  comment_text?: string | null
+/** Public feedback creation payload — free-form text + optional contact, NO sentiment (Req 1.1, 2.4). */
+export interface FeedbackCreatePayload {
+  text: string
+  contact?: string | null
 }
 
-export interface SubmissionCreateResponse {
-  submission_id: string
-  progress_state: number
+/** 201 response from POST /api/feedback (Req 1.8). */
+export interface FeedbackCreateResponse {
+  feedback_id: string
   message: string
-  warning?: string
 }
 
-export interface StatusResponse {
-  submission_id: string
-  progress_state: number
-  sentiment: 'negative' | 'positive' | 'neutral'
-  message: string
+/** A staff comment on a ticket as surfaced in the customer status view and admin panels (Req 7). */
+export interface TicketComment {
+  id: number
+  ticket_id: string
+  author: string
+  created_at: string
+  text: string
+}
+
+/** Public status view for a feedback item (Req 8, 9). */
+export interface FeedbackStatus {
+  feedback_id: string
+  enrichment_status: 'pending' | 'completed' | 'failed' | 'timeout'
+  triage_outcome: 'action_required' | 'no_action' | null
+  ticket: {
+    ticket_id: string
+    status: 'open' | 'in_progress' | 'resolved'
+  } | null
+  comments: TicketComment[]
+  analysis_in_progress: boolean
+}
+
+/** Admin-facing feedback row (list + detail) over the unified model (Req 10.2). */
+export interface FeedbackRow {
+  feedback_id: string
+  text: string
+  source_type: 'direct' | 'social'
+  channel: string | null
+  platform: 'reddit' | 'x' | 'facebook' | null
+  created_at: string
   enrichment_status: string
+  enrichment_result: EnrichmentResult | null
+  sentiment: 'positive' | 'neutral' | 'negative' | null
+  triage_outcome: 'action_required' | 'no_action' | null
+  triage_decision_source: 'automated' | 'admin' | null
+  needs_review: boolean
+  ticket_id: string | null
+  // NLP-derived routing/analytics fields.
+  department: string | null
+  severity: number | null // 1..10
+  severity_reasoning: string | null
+  location_city: string | null
+  location_state: string | null
+  latitude: number | null
+  longitude: number | null
+}
+
+/** Admin manual triage request body (Req 3.6, 3.7). */
+export interface TriagePayload {
+  outcome: 'action_required' | 'no_action'
+  ticket_id?: string
 }
 
 export interface StateTransition {
@@ -115,8 +149,7 @@ export interface SortResponse {
 }
 
 export interface Ticket {
-  id: string
-  submission_id: string
+  ticket_id: string
   issue_category: string
   description: string
   priority: string
@@ -124,25 +157,73 @@ export interface Ticket {
   created_at: string
 }
 
+/** Ticket enriched with the number of feedback items linked to it (Req 10.4). */
+export type TicketWithCount = Ticket & { linked_feedback_count: number }
+
+/** Ticket enriched with the ids of all linked feedback records. */
+export type TicketDetail = Ticket & { feedback_ids: string[] }
+
 export interface DashboardResponse {
-  total_submissions: number
+  total: number
   by_sentiment: Record<string, number>
-  by_progress_state: Record<string, number>
-  top_categories: Array<{ category: string; count: number }>
-  enrichment_status_counts?: Record<string, number>
-  top_themes?: Array<{ theme: string; count: number }>
-  average_severity?: number | null
-  by_language?: Record<string, number>
+  by_triage_outcome: Record<string, number>
+}
+
+/** One point on the geographic clustering map (Increment 4). */
+export interface MapPoint {
+  feedback_id: string
+  latitude: number
+  longitude: number
+  city: string | null
+  state: string | null
+  severity: number | null
+  sentiment: 'positive' | 'neutral' | 'negative' | null
+  department: string | null
+  source_type: 'direct' | 'social'
+  platform: 'reddit' | 'x' | 'facebook' | null
+  ticket_id: string | null
+}
+
+/** One row of the daily sentiment time-series. */
+export interface TimeSeriesPoint {
+  date: string
+  total: number
+  negative: number
+  neutral: number
+  positive: number
+}
+
+/** Per-state aggregate with average severity. */
+export interface StateAgg {
+  state: string
+  count: number
+  avg_severity: number | null
+}
+
+/** Rich analytics payload backing the dashboard charts + US map (GET /api/admin/analytics). */
+export interface AnalyticsResponse {
+  totals: {
+    total: number
+    tickets_linked: number
+    needs_review: number
+  }
+  by_sentiment: Record<string, number>
+  by_triage_outcome: Record<string, number>
+  by_department: Record<string, number>
+  by_source: Record<string, number>
+  by_state: StateAgg[]
+  severity_distribution: Record<string, number>
+  average_severity: number | null
+  time_series: TimeSeriesPoint[]
+  map_points: MapPoint[]
 }
 
 export interface MarketingEntry {
-  submission_id: string
-  customer_name: string
-  praise_text: string
-  social_sharing: boolean
-  social_status: 'shared' | 'internal_only' | 'generation_failed'
-  shareable_url: string | null
-  logged_at: string
+  feedback_id: string
+  text: string
+  created_at: string
+  source_type: 'direct' | 'social'
+  platform: 'reddit' | 'x' | 'facebook' | null
 }
 
 export interface MarketingListResponse {
@@ -162,10 +243,29 @@ export interface TrendRequest {
   current_window: TimeWindow
 }
 
+export interface TrendWindowAgg {
+  count: number
+  theme_counts: Record<string, number>
+  sentiment_counts: Record<string, number>
+  average_severity: number
+}
+
 export interface TrendReport {
-  theme_spikes: Array<{ theme: string; baseline_count: number; current_count: number }>
-  sentiment_shifts: Array<{ sentiment: string; baseline_ratio: number; current_ratio: number }>
-  severity_escalations: Array<{ category: string; baseline_avg: number; current_avg: number }>
+  baseline?: TrendWindowAgg
+  current?: TrendWindowAgg
+  theme_spikes: Array<{ theme: string; baseline: number; current: number }>
+  sentiment_shifts: Array<{
+    sentiment: string
+    baseline_ratio: number
+    current_ratio: number
+    delta: number
+  }>
+  severity_escalations: Array<{
+    scope: string
+    baseline_severity: number
+    current_severity: number
+    delta: number
+  }>
 }
 
 export interface LogoutResponse {
@@ -238,19 +338,14 @@ async function apiPatch<T>(path: string, body: unknown, token?: string | null): 
 
 // ─── Public API Methods ──────────────────────────────────────────────────────
 
-/** POST /api/submissions — Create a new submission */
-export function createSubmission(data: SubmissionCreatePayload): Promise<SubmissionCreateResponse> {
-  return apiPost<SubmissionCreateResponse>('/submissions', data)
+/** POST /api/feedback — Create a new feedback item (text + optional contact, NO sentiment) */
+export function createFeedback(data: FeedbackCreatePayload): Promise<FeedbackCreateResponse> {
+  return apiPost<FeedbackCreateResponse>('/feedback', data)
 }
 
-/** GET /api/submissions/{id}/status — Get progress state for polling */
-export function getSubmissionStatus(id: string): Promise<StatusResponse> {
-  return apiGet<StatusResponse>(`/submissions/${id}/status`)
-}
-
-/** GET /api/submissions/{id} — Get full submission record (admin) */
-export function getSubmission(id: string, token: string): Promise<Submission> {
-  return apiGet<Submission>(`/submissions/${id}`, token)
+/** GET /api/feedback/{id}/status — Public status view (enrichment, triage, ticket, comments) */
+export function getFeedbackStatus(id: string): Promise<FeedbackStatus> {
+  return apiGet<FeedbackStatus>(`/feedback/${id}/status`)
 }
 
 // ─── Auth Methods ────────────────────────────────────────────────────────────
@@ -285,9 +380,69 @@ export function sortSubmission(
   return apiPatch<SortResponse>(`/admin/queue/${id}/sort`, body, token)
 }
 
-/** GET /api/admin/tickets — List open/in-progress tickets */
-export function getTickets(token: string): Promise<Ticket[]> {
-  return apiGet<Ticket[]>('/admin/tickets', token)
+/** GET /api/admin/tickets — List tickets with linked feedback counts.
+ *  `status` is one of "active" (default), "resolved", or "all". */
+export function getTickets(
+  token: string,
+  status: 'active' | 'resolved' | 'all' = 'active'
+): Promise<TicketWithCount[]> {
+  return apiGet<TicketWithCount[]>(`/admin/tickets?status=${status}`, token)
+}
+
+/** GET /api/admin/tickets/{id} — Single ticket with linked feedback ids */
+export function getTicketDetail(token: string, id: string): Promise<TicketDetail> {
+  return apiGet<TicketDetail>(`/admin/tickets/${id}`, token)
+}
+
+/** GET /api/admin/review — List feedback flagged for manual triage (needs_review=1) */
+export function getReviewList(
+  token: string,
+  limit: number = 20,
+  offset: number = 0
+): Promise<FeedbackRow[]> {
+  return apiGet<FeedbackRow[]>(`/admin/review?limit=${limit}&offset=${offset}`, token)
+}
+
+/** GET /api/admin/review/count — Number of feedback items awaiting review */
+export function getReviewCount(token: string): Promise<{ count: number }> {
+  return apiGet<{ count: number }>('/admin/review/count', token)
+}
+
+/** PATCH /api/admin/feedback/{id}/triage — Submit a manual triage decision */
+export function submitTriage(
+  token: string,
+  feedbackId: string,
+  body: TriagePayload
+): Promise<FeedbackRow> {
+  return apiPatch<FeedbackRow>(`/admin/feedback/${feedbackId}/triage`, body, token)
+}
+
+/** GET /api/admin/feedback/{id} — Full feedback record (admin) */
+export function getAdminFeedback(token: string, id: string): Promise<FeedbackRow> {
+  return apiGet<FeedbackRow>(`/admin/feedback/${id}`, token)
+}
+
+/** GET /api/admin/feedback — List feedback rows (paginated) */
+export function listAdminFeedback(
+  token: string,
+  limit: number = 20,
+  offset: number = 0
+): Promise<FeedbackRow[]> {
+  return apiGet<FeedbackRow[]>(`/admin/feedback?limit=${limit}&offset=${offset}`, token)
+}
+
+/** POST /api/admin/tickets/{id}/comments — Add a staff comment to a ticket */
+export function createComment(
+  token: string,
+  ticketId: string,
+  text: string
+): Promise<TicketComment> {
+  return apiPost<TicketComment>(`/admin/tickets/${ticketId}/comments`, { text }, token)
+}
+
+/** GET /api/admin/tickets/{id}/comments — List a ticket's comments (ascending order) */
+export function listComments(token: string, ticketId: string): Promise<TicketComment[]> {
+  return apiGet<TicketComment[]>(`/admin/tickets/${ticketId}/comments`, token)
 }
 
 /** PATCH /api/admin/tickets/{id}/advance — Advance ticket status */
@@ -298,6 +453,11 @@ export function advanceTicket(token: string, id: string): Promise<Ticket> {
 /** GET /api/admin/dashboard — Summary stats */
 export function getDashboard(token: string): Promise<DashboardResponse> {
   return apiGet<DashboardResponse>('/admin/dashboard', token)
+}
+
+/** GET /api/admin/analytics — Rich analytics for dashboard charts + US map */
+export function getAnalytics(token: string): Promise<AnalyticsResponse> {
+  return apiGet<AnalyticsResponse>('/admin/analytics', token)
 }
 
 /** GET /api/admin/marketing — Paginated marketing log */

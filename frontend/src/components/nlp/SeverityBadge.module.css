@@ -1,0 +1,111 @@
+.wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spectrum-space-2);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+  padding: 2px var(--spectrum-space-2);
+  border-radius: var(--spectrum-radius-sm);
+  font-size: var(--spectrum-font-size-sm);
+  font-weight: var(--spectrum-font-weight-bold);
+  white-space: nowrap;
+}
+
+.scale {
+  font-size: var(--spectrum-font-size-xs);
+  font-weight: var(--spectrum-font-weight-medium);
+  opacity: 0.75;
+}
+
+/* Color bands */
+.low {
+  background-color: var(--spectrum-color-success-light);
+  color: var(--spectrum-color-success-text);
+}
+
+.medium {
+  background-color: var(--spectrum-color-warning-light);
+  color: var(--spectrum-color-warning-text);
+}
+
+.high {
+  background-color: #FDE8D8;
+  color: #9A4A00;
+}
+
+.critical {
+  background-color: var(--spectrum-color-error-light);
+  color: var(--spectrum-color-error-text);
+}
+
+.empty {
+  color: var(--spectrum-color-text-secondary);
+}
+
+/* ⓘ affordance + tooltip */
+.info {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  color: var(--spectrum-color-neutral-500);
+  cursor: help;
+  border-radius: var(--spectrum-radius-full);
+}
+
+.info:hover,
+.info:focus-visible {
+  color: var(--spectrum-color-primary);
+  outline: none;
+}
+
+.tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  width: max-content;
+  max-width: 260px;
+  padding: var(--spectrum-space-2) var(--spectrum-space-3);
+  background-color: var(--spectrum-color-neutral-700);
+  color: var(--spectrum-color-text-inverse);
+  font-size: var(--spectrum-font-size-xs);
+  font-weight: var(--spectrum-font-weight-normal);
+  line-height: var(--spectrum-line-height-normal);
+  border-radius: var(--spectrum-radius-md);
+  box-shadow: var(--spectrum-shadow-md);
+  white-space: normal;
+  text-align: left;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--spectrum-transition-fast) ease;
+  pointer-events: none;
+}
+
+/* Small caret under the bubble. */
+.tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--spectrum-color-neutral-700);
+}
+
+.info:hover .tooltip,
+.info:focus-visible .tooltip,
+.info:focus-within .tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tooltip {
+    transition: none;
+  }
+}

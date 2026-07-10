@@ -1,7 +1,8 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import StatusTracker, { getStatusMessage } from './StatusTracker'
+import StatusTracker, { buildStatusModel } from './StatusTracker'
+import type { FeedbackStatus } from '../api/client'
 
 // Mock the usePolling hook
 vi.mock('../hooks/usePolling', () => ({
@@ -11,6 +12,18 @@ vi.mock('../hooks/usePolling', () => ({
 import { usePolling } from '../hooks/usePolling'
 
 const mockedUsePolling = vi.mocked(usePolling)
+
+function makeStatus(overrides: Partial<FeedbackStatus> = {}): FeedbackStatus {
+  return {
+    feedback_id: 'abc-123',
+    enrichment_status: 'completed',
+    triage_outcome: null,
+    ticket: null,
+    comments: [],
+    analysis_in_progress: false,
+    ...overrides,
+  }
+}
 
 function renderStatusTracker(id?: string) {
   const path = id ? `/status/${id}` : '/status/'
@@ -29,7 +42,7 @@ describe('StatusTracker', () => {
     mockedUsePolling.mockReset()
   })
 
-  it('displays error when submission ID is missing', () => {
+  it('displays error when feedback ID is missing', () => {
     mockedUsePolling.mockReturnValue({
       status: null,
       error: null,
@@ -46,7 +59,7 @@ describe('StatusTracker', () => {
       </MemoryRouter>
     )
 
-    expect(screen.getByText('Submission not found')).toBeInTheDocument()
+    expect(screen.getByText('Feedback not found')).toBeInTheDocument()
   })
 
   it('shows loading state before first response', () => {
@@ -59,85 +72,12 @@ describe('StatusTracker', () => {
     })
 
     renderStatusTracker('abc-123')
-    expect(screen.getByText('Checking submission status…')).toBeInTheDocument()
+    expect(screen.getByText('Checking feedback status…')).toBeInTheDocument()
   })
 
-  it('displays progress bar at 25% with pulsing animation for neutral awaiting review', () => {
+  it('shows "no ticket associated" message when feedback has no ticket', () => {
     mockedUsePolling.mockReturnValue({
-      status: {
-        submission_id: 'abc-123',
-        progress_state: 25,
-        sentiment: 'neutral',
-        message: 'Awaiting Review',
-        enrichment_status: 'pending',
-      },
-      error: null,
-      isComplete: false,
-      connectionLost: false,
-      retry: vi.fn(),
-    })
-
-    renderStatusTracker('abc-123')
-    const progressBar = screen.getByRole('progressbar')
-    expect(progressBar).toHaveAttribute('aria-valuenow', '25')
-    const fill = progressBar.firstElementChild as HTMLElement
-    expect(fill.className).toMatch(/pulsing/)
-    expect(screen.getByText('Awaiting Review')).toBeInTheDocument()
-  })
-
-  it('displays progress bar at 50% for negative submission', () => {
-    mockedUsePolling.mockReturnValue({
-      status: {
-        submission_id: 'abc-123',
-        progress_state: 50,
-        sentiment: 'negative',
-        message: 'Spectrum is working on this.',
-        enrichment_status: 'pending',
-      },
-      error: null,
-      isComplete: false,
-      connectionLost: false,
-      retry: vi.fn(),
-    })
-
-    renderStatusTracker('abc-123')
-    const progressBar = screen.getByRole('progressbar')
-    expect(progressBar).toHaveAttribute('aria-valuenow', '50')
-    const fill = progressBar.firstElementChild as HTMLElement
-    expect(fill.className).not.toMatch(/pulsing/)
-    expect(screen.getByText('Spectrum is working on this.')).toBeInTheDocument()
-  })
-
-  it('displays progress bar at 75% with resolution message', () => {
-    mockedUsePolling.mockReturnValue({
-      status: {
-        submission_id: 'abc-123',
-        progress_state: 75,
-        sentiment: 'negative',
-        message: 'Almost there — resolution in progress.',
-        enrichment_status: 'completed',
-      },
-      error: null,
-      isComplete: false,
-      connectionLost: false,
-      retry: vi.fn(),
-    })
-
-    renderStatusTracker('abc-123')
-    const progressBar = screen.getByRole('progressbar')
-    expect(progressBar).toHaveAttribute('aria-valuenow', '75')
-    expect(screen.getByText('Almost there — resolution in progress.')).toBeInTheDocument()
-  })
-
-  it('displays progress bar at 100% with positive completion message', () => {
-    mockedUsePolling.mockReturnValue({
-      status: {
-        submission_id: 'abc-123',
-        progress_state: 100,
-        sentiment: 'positive',
-        message: 'Praise received & noted!',
-        enrichment_status: 'completed',
-      },
+      status: makeStatus({ triage_outcome: 'no_action' }),
       error: null,
       isComplete: true,
       connectionLost: false,
@@ -145,24 +85,71 @@ describe('StatusTracker', () => {
     })
 
     renderStatusTracker('abc-123')
-    const progressBar = screen.getByRole('progressbar')
-    expect(progressBar).toHaveAttribute('aria-valuenow', '100')
-    const fill = progressBar.firstElementChild as HTMLElement
-    expect(fill.className).toMatch(/complete/)
-    expect(screen.getByText('Praise received & noted!')).toBeInTheDocument()
-    expect(screen.getByText('Thank you for your feedback!')).toBeInTheDocument()
+    expect(
+      screen.getByText('No ticket is associated with this feedback yet.')
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText('Reviewed and retained as feedback.')
+    ).toBeInTheDocument()
+  })
+
+  it('renders the linked ticket status and its comments (ascending)', () => {
+    mockedUsePolling.mockReturnValue({
+      status: makeStatus({
+        triage_outcome: 'action_required',
+        ticket: { ticket_id: 't-1', status: 'in_progress' },
+        comments: [
+          {
+            id: 1,
+            ticket_id: 't-1',
+            author: 'admin',
+            created_at: '2024-01-01T10:00:00Z',
+            text: 'We are looking into this.',
+          },
+          {
+            id: 2,
+            ticket_id: 't-1',
+            author: 'support',
+            created_at: '2024-01-02T10:00:00Z',
+            text: 'Fix is on the way.',
+          },
+        ],
+      }),
+      error: null,
+      isComplete: true,
+      connectionLost: false,
+      retry: vi.fn(),
+    })
+
+    renderStatusTracker('abc-123')
+    expect(screen.getByText('Ticket status:')).toBeInTheDocument()
+    expect(screen.getByText('In progress')).toBeInTheDocument()
+    expect(screen.getByText('We are looking into this.')).toBeInTheDocument()
+    expect(screen.getByText('Fix is on the way.')).toBeInTheDocument()
+    expect(screen.getByText('admin')).toBeInTheDocument()
+    expect(screen.getByText('support')).toBeInTheDocument()
+  })
+
+  it('indicates analysis in progress while enrichment is pending', () => {
+    mockedUsePolling.mockReturnValue({
+      status: makeStatus({
+        enrichment_status: 'pending',
+        analysis_in_progress: true,
+      }),
+      error: null,
+      isComplete: false,
+      connectionLost: false,
+      retry: vi.fn(),
+    })
+
+    renderStatusTracker('abc-123')
+    expect(screen.getByText('Analysis in progress')).toBeInTheDocument()
   })
 
   it('displays connection lost message with retry button', () => {
     const retryFn = vi.fn()
     mockedUsePolling.mockReturnValue({
-      status: {
-        submission_id: 'abc-123',
-        progress_state: 50,
-        sentiment: 'negative',
-        message: 'Spectrum is working on this.',
-        enrichment_status: 'pending',
-      },
+      status: makeStatus({ enrichment_status: 'pending' }),
       error: new Error('Network error'),
       isComplete: false,
       connectionLost: true,
@@ -170,7 +157,9 @@ describe('StatusTracker', () => {
     })
 
     renderStatusTracker('abc-123')
-    expect(screen.getByText('Connection to the server has been lost.')).toBeInTheDocument()
+    expect(
+      screen.getByText('Connection to the server has been lost.')
+    ).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument()
   })
 
@@ -189,7 +178,7 @@ describe('StatusTracker', () => {
     expect(retryFn).toHaveBeenCalledOnce()
   })
 
-  it('passes the submission ID from URL params to usePolling', () => {
+  it('passes the feedback ID from URL params to usePolling', () => {
     mockedUsePolling.mockReturnValue({
       status: null,
       error: null,
@@ -198,37 +187,49 @@ describe('StatusTracker', () => {
       retry: vi.fn(),
     })
 
-    renderStatusTracker('my-submission-id')
-    expect(mockedUsePolling).toHaveBeenCalledWith('my-submission-id')
+    renderStatusTracker('my-feedback-id')
+    expect(mockedUsePolling).toHaveBeenCalledWith('my-feedback-id')
   })
 })
 
-describe('getStatusMessage', () => {
-  it('returns "Awaiting Review" for 25% progress', () => {
-    expect(getStatusMessage(25, 'neutral')).toBe('Awaiting Review')
+describe('buildStatusModel', () => {
+  it('reports no ticket and empty comments when unlinked', () => {
+    const model = buildStatusModel(
+      makeStatus({ triage_outcome: 'no_action', ticket: null })
+    )
+    expect(model.hasTicket).toBe(false)
+    expect(model.ticketStatus).toBeNull()
+    expect(model.comments).toEqual([])
+    expect(model.triageLabel).toBe('Reviewed and retained as feedback.')
   })
 
-  it('returns "Spectrum is working on this." for 50% progress', () => {
-    expect(getStatusMessage(50, 'negative')).toBe('Spectrum is working on this.')
+  it('exposes the linked ticket status and comments', () => {
+    const comments = [
+      {
+        id: 1,
+        ticket_id: 't-1',
+        author: 'admin',
+        created_at: '2024-01-01T10:00:00Z',
+        text: 'hello',
+      },
+    ]
+    const model = buildStatusModel(
+      makeStatus({
+        triage_outcome: 'action_required',
+        ticket: { ticket_id: 't-1', status: 'resolved' },
+        comments,
+      })
+    )
+    expect(model.hasTicket).toBe(true)
+    expect(model.ticketStatus).toBe('resolved')
+    expect(model.comments).toEqual(comments)
   })
 
-  it('returns "Almost there — resolution in progress." for 75% progress', () => {
-    expect(getStatusMessage(75, 'negative')).toBe('Almost there — resolution in progress.')
-  })
-
-  it('returns "Praise received & noted!" for 100% positive', () => {
-    expect(getStatusMessage(100, 'positive')).toBe('Praise received & noted!')
-  })
-
-  it('returns "Your issue has been resolved." for 100% negative', () => {
-    expect(getStatusMessage(100, 'negative')).toBe('Your issue has been resolved.')
-  })
-
-  it('returns "Your issue has been resolved." for 100% neutral', () => {
-    expect(getStatusMessage(100, 'neutral')).toBe('Your issue has been resolved.')
-  })
-
-  it('returns default message for unknown progress states', () => {
-    expect(getStatusMessage(60, 'negative')).toBe('Spectrum is working on this.')
+  it('reports analysis in progress while enrichment is pending', () => {
+    const model = buildStatusModel(
+      makeStatus({ enrichment_status: 'pending', analysis_in_progress: true })
+    )
+    expect(model.analysisInProgress).toBe(true)
+    expect(model.statusLabel).toBe('Analysis in progress')
   })
 })

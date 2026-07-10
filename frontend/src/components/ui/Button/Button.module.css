@@ -11,21 +11,30 @@
   font-family: var(--spectrum-font-family);
   font-weight: var(--spectrum-font-weight-semibold);
   line-height: var(--spectrum-line-height-tight);
-  border-radius: var(--spectrum-radius-md);
+  border-radius: var(--spectrum-radius-md); /* rounded rectangle */
   border: 2px solid transparent;
   cursor: pointer;
   text-align: center;
   white-space: nowrap;
   user-select: none;
   transition: filter var(--spectrum-transition-fast) ease-in-out,
+    transform var(--spectrum-transition-fast) ease-in-out,
+    box-shadow var(--spectrum-transition-fast) ease-in-out,
     background-color var(--spectrum-transition-fast) ease-in-out,
     color var(--spectrum-transition-fast) ease-in-out,
     border-color var(--spectrum-transition-fast) ease-in-out;
 }
 
-/* Hover: darken background by ~10% (Requirement 3.7) */
+/* Hover: darken slightly and lift 1px for tactility (Requirement 3.7) */
 .button:hover {
-  filter: brightness(0.9);
+  filter: brightness(0.96);
+  transform: translateY(-1px);
+}
+
+/* Pressed: settle back down. */
+.button:active {
+  transform: translateY(0);
+  filter: brightness(0.92);
 }
 
 /* Keyboard focus: 2px Spectrum Blue ring with 2px offset (Requirement 3.8) */
@@ -43,11 +52,16 @@
 
 /* Variants */
 
-/* Primary (Requirement 3.2) */
+/* Primary (Requirement 3.2) — glossy blue gradient with a soft blue shadow */
 .primary {
-  background-color: var(--spectrum-color-primary);
+  background: var(--spectrum-gradient-primary);
   color: var(--spectrum-color-text-inverse);
-  border-color: var(--spectrum-color-primary);
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(11, 84, 190, 0.28);
+}
+
+.primary:hover {
+  box-shadow: 0 8px 20px rgba(11, 84, 190, 0.34);
 }
 
 /* Secondary (Requirement 3.3) */
@@ -57,18 +71,28 @@
   border-color: var(--spectrum-color-secondary);
 }
 
-/* Outline (Requirement 3.4) */
+/* Outline (Requirement 3.4) — subtle tinted fill on hover */
 .outline {
-  background-color: transparent;
+  background-color: var(--spectrum-color-white);
   color: var(--spectrum-color-primary);
   border: 2px solid var(--spectrum-color-primary);
 }
 
-/* Ghost (Requirement 3.5) */
+.outline:hover {
+  filter: none;
+  background-color: var(--spectrum-color-info-light);
+}
+
+/* Ghost (Requirement 3.5) — light tint on hover instead of darkening */
 .ghost {
   background-color: transparent;
   color: var(--spectrum-color-primary);
   border-color: transparent;
+}
+
+.ghost:hover {
+  filter: none;
+  background-color: var(--spectrum-color-info-light);
 }
 
 /* Sizes (Requirement 3.6) */

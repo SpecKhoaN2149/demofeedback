@@ -7,7 +7,8 @@
    (Requirements 5.1, 5.2) */
 .card {
   background-color: var(--spectrum-color-white);
-  border-radius: var(--spectrum-radius-md);
+  border: 1px solid var(--spectrum-color-card-border);
+  border-radius: var(--spectrum-radius-lg);
   box-shadow: var(--spectrum-shadow-md);
   padding: var(--spectrum-space-6); /* 24px */
   transition: box-shadow var(--spectrum-transition-normal) ease-in-out,
@@ -30,8 +31,8 @@
   outline-offset: 2px;
 }
 
-/* Bordered: 1px solid neutral-200 border, no shadow (Requirement 5.4) */
+/* Bordered: light-blue hairline, softer shadow (Requirement 5.4) */
 .bordered {
-  border: 1px solid var(--spectrum-color-neutral-200);
-  box-shadow: none;
+  border: 1px solid var(--spectrum-color-card-border);
+  box-shadow: var(--spectrum-shadow-sm);
 }

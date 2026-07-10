@@ -1,0 +1,228 @@
+/**
+ * Modern, simplistic light dashboard theme.
+ *
+ * Clean white surfaces on the app's soft background, subtle borders, soft
+ * shadows, and thin colored accents. Scoped to the admin dashboard page.
+ */
+
+.canvas {
+  font-family: var(--spectrum-font-family);
+  color: var(--spectrum-color-text-primary);
+  animation: fadeIn var(--spectrum-transition-normal) ease-in-out;
+}
+
+/* ---- Header ---- */
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spectrum-space-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--spectrum-space-8);
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  gap: var(--spectrum-space-3);
+  font-size: var(--spectrum-font-size-3xl);
+  font-weight: var(--spectrum-font-weight-bold);
+  letter-spacing: -0.02em;
+  color: var(--spectrum-color-text-primary);
+  margin: 0;
+  line-height: 1.1;
+}
+
+.titleAccent {
+  width: 5px;
+  height: 30px;
+  border-radius: 3px;
+  background: var(--spectrum-gradient-brand);
+}
+
+.subtitle {
+  margin: var(--spectrum-space-2) 0 0;
+  color: var(--spectrum-color-text-secondary);
+  font-size: var(--spectrum-font-size-sm);
+}
+
+/* Subtle "live" pill. */
+.livePill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spectrum-space-2);
+  padding: 6px 14px;
+  border-radius: var(--spectrum-radius-full);
+  background: var(--spectrum-color-success-light);
+  border: 1px solid rgba(46, 125, 50, 0.25);
+  color: var(--spectrum-color-success);
+  font-size: var(--spectrum-font-size-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.liveDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--spectrum-color-success);
+  animation: pulse 1.8s infinite;
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(46, 125, 50, 0.4); }
+  70% { box-shadow: 0 0 0 7px rgba(46, 125, 50, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(46, 125, 50, 0); }
+}
+
+/* ---- Section headings ---- */
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--spectrum-space-2);
+  font-size: var(--spectrum-font-size-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--spectrum-color-text-secondary);
+  margin: 0 0 var(--spectrum-space-4);
+}
+
+.sectionTitle::before {
+  content: '';
+  width: 14px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--spectrum-color-primary);
+}
+
+.section {
+  margin-bottom: var(--spectrum-space-8);
+}
+
+.section:last-child {
+  margin-bottom: 0;
+}
+
+/* ---- KPI tiles ---- */
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spectrum-space-4);
+}
+
+.kpi {
+  position: relative;
+  padding: var(--spectrum-space-5);
+  border-radius: var(--spectrum-radius-lg);
+  background: var(--spectrum-color-white);
+  border: 1px solid var(--spectrum-color-card-border);
+  box-shadow: var(--spectrum-shadow-sm);
+  overflow: hidden;
+  transition: transform var(--spectrum-transition-fast) ease,
+    box-shadow var(--spectrum-transition-fast) ease;
+}
+
+.kpi:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--spectrum-shadow-md);
+}
+
+/* Clickable KPI tiles: pointer + reveal a subtle arrow affordance. */
+.kpiLink {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.kpiLink:hover {
+  border-color: var(--spectrum-color-primary);
+}
+
+.kpiLink:focus-visible {
+  outline: 2px solid var(--spectrum-color-primary);
+  outline-offset: 2px;
+}
+
+.kpiArrow {
+  position: absolute;
+  top: var(--spectrum-space-4);
+  right: var(--spectrum-space-4);
+  color: var(--spectrum-color-primary);
+  font-weight: var(--spectrum-font-weight-bold);
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity var(--spectrum-transition-fast) ease,
+    transform var(--spectrum-transition-fast) ease;
+}
+
+.kpiLink:hover .kpiArrow,
+.kpiLink:focus-visible .kpiArrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Thin accent bar along the top of each tile. */
+.kpi::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--kpi-accent, var(--spectrum-color-primary));
+}
+
+.kpiValue {
+  font-size: 2.1rem;
+  font-weight: var(--spectrum-font-weight-bold);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--spectrum-color-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.kpiLabel {
+  margin-top: var(--spectrum-space-2);
+  font-size: var(--spectrum-font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--spectrum-color-text-secondary);
+}
+
+.kpiHint {
+  margin-top: var(--spectrum-space-1);
+  font-size: 11px;
+  color: var(--spectrum-color-neutral-400);
+}
+
+/* ---- Chart grid ---- */
+.chartGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  gap: var(--spectrum-space-5);
+}
+
+.empty {
+  color: var(--spectrum-color-text-secondary);
+  font-size: var(--spectrum-font-size-sm);
+  padding: var(--spectrum-space-8) 0;
+  text-align: center;
+}
+
+/* ---- States / error ---- */
+.stateMsg {
+  color: var(--spectrum-color-text-secondary);
+  padding: var(--spectrum-space-4) 0;
+}
+
+.error {
+  color: var(--spectrum-color-error);
+  background-color: var(--spectrum-color-error-light);
+  border-left: 4px solid var(--spectrum-color-error);
+  border-radius: var(--spectrum-radius-sm);
+  padding: var(--spectrum-space-3) var(--spectrum-space-4);
+}

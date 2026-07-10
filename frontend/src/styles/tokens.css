@@ -11,6 +11,20 @@
   --spectrum-color-secondary: #002F6C;
   --spectrum-color-accent: #00A3E0;
 
+  /* Brand gradients (blue → teal → green identity from the theme) */
+  --spectrum-gradient-brand: linear-gradient(
+    90deg,
+    #0A63C8 0%,
+    #159FC4 55%,
+    #34C08A 100%
+  );
+  /* Glossy primary button gradient (top-lighter → bottom-deeper blue) */
+  --spectrum-gradient-primary: linear-gradient(180deg, #2C86E6 0%, #0A54BE 100%);
+  /* Soft app background gradient (pale blue → pale mint) */
+  --spectrum-gradient-bg: linear-gradient(160deg, #E9F2FC 0%, #E9F6EF 100%);
+  /* Light-blue hairline used on cards/surfaces */
+  --spectrum-color-card-border: #B7D8F2;
+
   /* Colors - Neutral */
   --spectrum-color-white: #FFFFFF;
   --spectrum-color-background: #FFFFFF;
@@ -50,9 +64,9 @@
   --spectrum-color-error-text: #B3261E;
   --spectrum-color-info-text: #0059B8;
 
-  /* Colors - Text */
-  --spectrum-color-text-primary: #1A1A1A;
-  --spectrum-color-text-secondary: #4A4A4A;
+  /* Colors - Text (headings use a rich navy-black to match the theme) */
+  --spectrum-color-text-primary: #0B1E33;
+  --spectrum-color-text-secondary: #45566A;
   --spectrum-color-text-inverse: #FFFFFF;
 
   /* Typography */
@@ -88,15 +102,15 @@
   --spectrum-space-16: 4rem;     /* 64px */
 
   /* Border Radius */
-  --spectrum-radius-sm: 0.25rem;   /* 4px */
-  --spectrum-radius-md: 0.5rem;    /* 8px */
-  --spectrum-radius-lg: 0.75rem;   /* 12px */
+  --spectrum-radius-sm: 0.375rem;  /* 6px */
+  --spectrum-radius-md: 0.625rem;  /* 10px — softer inputs/controls */
+  --spectrum-radius-lg: 1rem;      /* 16px — rounded cards */
   --spectrum-radius-full: 9999px;
 
-  /* Shadows */
-  --spectrum-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
-  --spectrum-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
-  --spectrum-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+  /* Shadows — softened with a subtle blue cast to match the theme */
+  --spectrum-shadow-sm: 0 1px 3px rgba(10, 60, 120, 0.10);
+  --spectrum-shadow-md: 0 6px 18px rgba(10, 60, 120, 0.12);
+  --spectrum-shadow-lg: 0 14px 34px rgba(10, 60, 120, 0.16);
 
   /* Transitions */
   --spectrum-transition-fast: 150ms;

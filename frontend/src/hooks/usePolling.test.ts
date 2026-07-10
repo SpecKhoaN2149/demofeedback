@@ -5,14 +5,29 @@ import * as client from '../api/client'
 
 // Mock the API client
 vi.mock('../api/client', () => ({
-  getSubmissionStatus: vi.fn(),
+  getFeedbackStatus: vi.fn(),
 }))
 
-const mockGetSubmissionStatus = vi.mocked(client.getSubmissionStatus)
+const mockGetFeedbackStatus = vi.mocked(client.getFeedbackStatus)
+
+/** Builds a FeedbackStatus payload with sensible defaults for tests. */
+function makeStatus(
+  overrides: Partial<client.FeedbackStatus> = {}
+): client.FeedbackStatus {
+  return {
+    feedback_id: 'test-id',
+    enrichment_status: 'pending',
+    triage_outcome: null,
+    ticket: null,
+    comments: [],
+    analysis_in_progress: true,
+    ...overrides,
+  }
+}
 
 /**
  * Advances fake timers by `ms` and flushes any pending promises/microtasks
- * created by the async poll (getSubmissionStatus). Using the *async* timer
+ * created by the async poll (getFeedbackStatus). Using the *async* timer
  * API is essential here: the hook awaits a fetch inside each poll, so a
  * synchronous `advanceTimersByTime` would fire the timer callback but leave
  * the awaited promise (and the resulting React state update) unresolved.
@@ -34,113 +49,100 @@ describe('usePolling', () => {
     vi.useRealTimers()
   })
 
-  it('does not poll when submissionId is null', () => {
+  it('does not poll when feedbackId is null', () => {
     renderHook(() => usePolling(null))
-    expect(mockGetSubmissionStatus).not.toHaveBeenCalled()
+    expect(mockGetFeedbackStatus).not.toHaveBeenCalled()
   })
 
-  it('polls immediately on mount with a valid submissionId', async () => {
-    const mockResponse: client.StatusResponse = {
-      submission_id: 'test-id',
-      progress_state: 50,
-      sentiment: 'negative',
-      message: 'Spectrum is working on this.',
-      enrichment_status: 'pending',
-    }
-    mockGetSubmissionStatus.mockResolvedValueOnce(mockResponse)
+  it('polls immediately on mount with a valid feedbackId', async () => {
+    const mockResponse = makeStatus({ enrichment_status: 'pending' })
+    mockGetFeedbackStatus.mockResolvedValueOnce(mockResponse)
 
     const { result } = renderHook(() => usePolling('test-id'))
 
     // Flush the immediate mount poll and its resulting state update
     await advance()
 
-    expect(mockGetSubmissionStatus).toHaveBeenCalledWith('test-id')
+    expect(mockGetFeedbackStatus).toHaveBeenCalledWith('test-id')
     expect(result.current.status).toEqual(mockResponse)
     expect(result.current.isComplete).toBe(false)
     expect(result.current.connectionLost).toBe(false)
     expect(result.current.error).toBeNull()
   })
 
-  it('stops polling when progress_state reaches 100', async () => {
-    const mockResponse: client.StatusResponse = {
-      submission_id: 'test-id',
-      progress_state: 100,
-      sentiment: 'negative',
-      message: 'Resolved!',
+  it('stops polling when enrichment reaches a terminal state', async () => {
+    const mockResponse = makeStatus({
       enrichment_status: 'completed',
-    }
-    mockGetSubmissionStatus.mockResolvedValueOnce(mockResponse)
+      analysis_in_progress: false,
+      triage_outcome: 'action_required',
+      ticket: { ticket_id: 't-1', status: 'in_progress' },
+    })
+    mockGetFeedbackStatus.mockResolvedValueOnce(mockResponse)
 
     const { result } = renderHook(() => usePolling('test-id'))
 
     await advance()
 
     expect(result.current.isComplete).toBe(true)
-    expect(result.current.status?.progress_state).toBe(100)
+    expect(result.current.status?.enrichment_status).toBe('completed')
 
     // Advance time — no more polls should fire
-    mockGetSubmissionStatus.mockClear()
+    mockGetFeedbackStatus.mockClear()
     await advance(15000)
-    expect(mockGetSubmissionStatus).not.toHaveBeenCalled()
+    expect(mockGetFeedbackStatus).not.toHaveBeenCalled()
   })
 
   it('applies exponential backoff on failure', async () => {
-    mockGetSubmissionStatus.mockRejectedValue(new Error('Network error'))
+    mockGetFeedbackStatus.mockRejectedValue(new Error('Network error'))
 
     const { result } = renderHook(() => usePolling('test-id'))
 
     // First call happens immediately
     await advance()
-    expect(mockGetSubmissionStatus).toHaveBeenCalledTimes(1)
+    expect(mockGetFeedbackStatus).toHaveBeenCalledTimes(1)
     expect(result.current.error).toBeTruthy()
 
     // First failure → backoff = computeBackoff(1) = 5s
-    mockGetSubmissionStatus.mockClear()
+    mockGetFeedbackStatus.mockClear()
     await advance(computeBackoff(1))
-    expect(mockGetSubmissionStatus).toHaveBeenCalledTimes(1)
+    expect(mockGetFeedbackStatus).toHaveBeenCalledTimes(1)
   })
 
   it('stops polling after 10 consecutive failures and sets connectionLost', async () => {
-    mockGetSubmissionStatus.mockRejectedValue(new Error('Network error'))
+    mockGetFeedbackStatus.mockRejectedValue(new Error('Network error'))
 
     const { result } = renderHook(() => usePolling('test-id'))
 
     // Poll #1 fires immediately on mount
     await advance()
-    expect(mockGetSubmissionStatus).toHaveBeenCalledTimes(1)
+    expect(mockGetFeedbackStatus).toHaveBeenCalledTimes(1)
 
     // Drive polls #2..#10, each after its scheduled backoff interval
     for (let n = 1; n <= 9; n++) {
       await advance(computeBackoff(n))
     }
 
-    expect(mockGetSubmissionStatus).toHaveBeenCalledTimes(10)
+    expect(mockGetFeedbackStatus).toHaveBeenCalledTimes(10)
     expect(result.current.connectionLost).toBe(true)
 
     // No more polls after connection lost
-    mockGetSubmissionStatus.mockClear()
+    mockGetFeedbackStatus.mockClear()
     await advance(120000)
-    expect(mockGetSubmissionStatus).not.toHaveBeenCalled()
+    expect(mockGetFeedbackStatus).not.toHaveBeenCalled()
   })
 
   it('resets failure count on successful poll', async () => {
     // First call fails
-    mockGetSubmissionStatus.mockRejectedValueOnce(new Error('fail'))
+    mockGetFeedbackStatus.mockRejectedValueOnce(new Error('fail'))
 
     const { result } = renderHook(() => usePolling('test-id'))
 
     await advance()
     expect(result.current.error).toBeTruthy()
 
-    // After backoff, next call succeeds
-    const mockResponse: client.StatusResponse = {
-      submission_id: 'test-id',
-      progress_state: 50,
-      sentiment: 'negative',
-      message: 'Spectrum is working on this.',
-      enrichment_status: 'pending',
-    }
-    mockGetSubmissionStatus.mockResolvedValueOnce(mockResponse)
+    // After backoff, next call succeeds (still pending → keeps polling)
+    const mockResponse = makeStatus({ enrichment_status: 'pending' })
+    mockGetFeedbackStatus.mockResolvedValueOnce(mockResponse)
 
     await advance(computeBackoff(1))
 
@@ -149,7 +151,7 @@ describe('usePolling', () => {
   })
 
   it('retry() restarts polling after connectionLost', async () => {
-    mockGetSubmissionStatus.mockRejectedValue(new Error('Network error'))
+    mockGetFeedbackStatus.mockRejectedValue(new Error('Network error'))
 
     const { result } = renderHook(() => usePolling('test-id'))
 
@@ -162,15 +164,12 @@ describe('usePolling', () => {
     expect(result.current.connectionLost).toBe(true)
 
     // Now retry with a success
-    const mockResponse: client.StatusResponse = {
-      submission_id: 'test-id',
-      progress_state: 75,
-      sentiment: 'negative',
-      message: 'Almost there — resolution in progress.',
+    const mockResponse = makeStatus({
       enrichment_status: 'completed',
-    }
-    mockGetSubmissionStatus.mockReset()
-    mockGetSubmissionStatus.mockResolvedValueOnce(mockResponse)
+      analysis_in_progress: false,
+    })
+    mockGetFeedbackStatus.mockReset()
+    mockGetFeedbackStatus.mockResolvedValueOnce(mockResponse)
 
     await act(async () => {
       result.current.retry()
@@ -182,25 +181,19 @@ describe('usePolling', () => {
   })
 
   it('cleans up on unmount', async () => {
-    const mockResponse: client.StatusResponse = {
-      submission_id: 'test-id',
-      progress_state: 50,
-      sentiment: 'negative',
-      message: 'Working...',
-      enrichment_status: 'pending',
-    }
-    mockGetSubmissionStatus.mockResolvedValue(mockResponse)
+    const mockResponse = makeStatus({ enrichment_status: 'pending' })
+    mockGetFeedbackStatus.mockResolvedValue(mockResponse)
 
     const { unmount } = renderHook(() => usePolling('test-id'))
 
     await advance()
-    expect(mockGetSubmissionStatus).toHaveBeenCalledTimes(1)
+    expect(mockGetFeedbackStatus).toHaveBeenCalledTimes(1)
 
     unmount()
 
-    mockGetSubmissionStatus.mockClear()
+    mockGetFeedbackStatus.mockClear()
     await advance(10000)
-    expect(mockGetSubmissionStatus).not.toHaveBeenCalled()
+    expect(mockGetFeedbackStatus).not.toHaveBeenCalled()
   })
 })
 

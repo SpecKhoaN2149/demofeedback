@@ -22,6 +22,12 @@
   flex: 1 1 auto;
   min-height: 0;
   font-family: var(--spectrum-font-family);
+  transition: grid-template-columns var(--spectrum-transition-normal) ease;
+}
+
+/* Collapsed sidebar: narrow the grid column so content reflows to fill space. */
+.layout.collapsed {
+  grid-template-columns: 64px 1fr;
 }
 
 .sidebar {
@@ -31,14 +37,28 @@
 }
 
 .content {
-  padding: var(--spectrum-space-6);
+  padding: var(--spectrum-space-8);
   min-width: 0; /* Allow content to shrink instead of forcing horizontal overflow. */
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto; /* Center content on very wide screens for readability. */
 }
 
 /* Tablet and below: collapse to a single column with a horizontal tab bar. */
 @media (max-width: 1023.98px) {
-  .layout {
+  .layout,
+  .layout.collapsed {
     grid-template-columns: 1fr;
+  }
+
+  /* The desktop collapse toggle is meaningless in the horizontal tab bar. */
+  .sidebar button {
+    display: none;
+  }
+
+  /* Force labels back on even if the collapsed preference was set on desktop. */
+  .sidebar span {
+    display: inline-flex !important;
   }
 
   /* Reflow the sidebar into a full-width, horizontally scrollable tab bar.

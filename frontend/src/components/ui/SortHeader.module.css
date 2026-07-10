@@ -1,0 +1,44 @@
+/**
+ * Sortable table header cell. Inherits the table's th look from admin.module.css
+ * but turns the label into a clickable button with a sort indicator.
+ */
+
+.th {
+  padding: 0 !important;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spectrum-space-2);
+  width: 100%;
+  appearance: none;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  padding: var(--spectrum-space-3) var(--spectrum-space-4);
+}
+
+.btn:hover {
+  color: var(--spectrum-color-primary);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--spectrum-color-primary);
+  outline-offset: -2px;
+}
+
+.arrow {
+  font-size: 10px;
+  opacity: 0.35;
+  transition: opacity var(--spectrum-transition-fast) ease;
+}
+
+.arrow.active {
+  opacity: 1;
+  color: var(--spectrum-color-primary);
+}

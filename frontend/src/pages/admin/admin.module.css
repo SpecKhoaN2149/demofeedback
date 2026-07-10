@@ -23,6 +23,7 @@
   font-size: var(--spectrum-font-size-3xl);
   font-weight: var(--spectrum-font-weight-bold);
   line-height: var(--spectrum-line-height-tight);
+  letter-spacing: -0.02em;
   margin-bottom: var(--spectrum-space-6);
 }
 
@@ -48,10 +49,17 @@
   margin-bottom: var(--spectrum-space-8);
 }
 
-/* Each stat card gets a 4px colored top border indicating sentiment. */
+/* Each stat card gets a 4px colored top accent indicating its metric. */
 .statCard {
   border-top: 4px solid var(--spectrum-color-neutral-300);
   text-align: center;
+  transition: transform var(--spectrum-transition-fast) ease,
+    box-shadow var(--spectrum-transition-fast) ease;
+}
+
+.statCard:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--spectrum-shadow-md);
 }
 
 .statValue {
@@ -59,12 +67,16 @@
   font-weight: var(--spectrum-font-weight-bold);
   line-height: var(--spectrum-line-height-tight);
   color: var(--spectrum-color-text-primary);
+  letter-spacing: -0.01em;
 }
 
 .statLabel {
-  font-size: var(--spectrum-font-size-sm);
+  font-size: var(--spectrum-font-size-xs);
+  font-weight: var(--spectrum-font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   color: var(--spectrum-color-text-secondary);
-  margin-top: var(--spectrum-space-1);
+  margin-top: var(--spectrum-space-2);
 }
 
 /* Colored top borders: blue total, red negative, green positive, gray neutral. */
@@ -91,19 +103,24 @@
   width: 100%;
   border-collapse: collapse;
   font-size: var(--spectrum-font-size-sm);
+  background-color: var(--spectrum-color-white);
 }
 
-/* Semibold header cells with a light gray background. */
+/* Uppercase, tracked header labels on a tinted bar — a cleaner dashboard look. */
 .table thead th {
   text-align: left;
   font-weight: var(--spectrum-font-weight-semibold);
+  font-size: var(--spectrum-font-size-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   background-color: var(--spectrum-color-surface);
-  color: var(--spectrum-color-text-primary);
+  color: var(--spectrum-color-text-secondary);
   padding: var(--spectrum-space-3) var(--spectrum-space-4);
-  border-bottom: 1px solid var(--spectrum-color-neutral-300);
+  border-bottom: 1px solid var(--spectrum-color-neutral-200);
+  white-space: nowrap;
 }
 
-/* 1px bottom borders between rows. */
+/* Hairline row separators; comfortable padding. */
 .table tbody td {
   padding: var(--spectrum-space-3) var(--spectrum-space-4);
   border-bottom: 1px solid var(--spectrum-color-neutral-200);
@@ -111,20 +128,29 @@
   vertical-align: top;
 }
 
-/* Alternating row background colors (white and surface token). */
-.table tbody tr:nth-child(odd) {
-  background-color: var(--spectrum-color-white);
+/* Drop the separator on the final row so it meets the container edge cleanly. */
+.table tbody tr:last-child td {
+  border-bottom: none;
 }
 
-.table tbody tr:nth-child(even) {
-  background-color: var(--spectrum-color-surface);
+/* Subtle hover highlight instead of hard zebra striping. */
+.table tbody tr {
+  transition: background-color var(--spectrum-transition-fast) ease;
 }
 
-/* Table wrapper allows horizontal scroll on small viewports without overflowing
-   the page (Requirement 14.5). */
+.table tbody tr:hover {
+  background-color: var(--spectrum-color-info-light);
+}
+
+/* Wrapper is a rounded, bordered surface with a soft shadow; scrolls
+   horizontally on small viewports without overflowing (Requirement 14.5). */
 .tableWrapper {
   overflow-x: auto;
   max-width: 100%;
+  border: 1px solid var(--spectrum-color-card-border);
+  border-radius: var(--spectrum-radius-lg);
+  box-shadow: var(--spectrum-shadow-sm);
+  background-color: var(--spectrum-color-white);
 }
 
 /* --------------------------------------------------------------------------
@@ -196,6 +222,11 @@
 .nlpEmpty {
   font-size: var(--spectrum-font-size-sm);
   color: var(--spectrum-color-text-secondary);
+}
+
+.locationHint {
+  color: var(--spectrum-color-text-secondary);
+  font-size: var(--spectrum-font-size-sm);
 }
 
 /* ---- Submission detail page ---- */
@@ -334,4 +365,271 @@
 .select {
   width: auto;
   min-width: 180px;
+}
+
+/* --------------------------------------------------------------------------
+   Feedback detail — ticket comments panel
+   -------------------------------------------------------------------------- */
+.commentsCard {
+  grid-column: 1 / -1;
+}
+
+.commentList {
+  list-style: none;
+  margin: 0 0 var(--spectrum-space-4);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spectrum-space-3);
+}
+
+.comment {
+  border: 1px solid var(--spectrum-color-neutral-200);
+  border-radius: var(--spectrum-radius-md);
+  padding: var(--spectrum-space-3) var(--spectrum-space-4);
+  background-color: var(--spectrum-color-surface);
+}
+
+.commentMeta {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spectrum-space-3);
+  margin-bottom: var(--spectrum-space-1);
+}
+
+.commentAuthor {
+  font-size: var(--spectrum-font-size-sm);
+  font-weight: var(--spectrum-font-weight-semibold);
+  color: var(--spectrum-color-text-primary);
+}
+
+.commentTime {
+  font-size: var(--spectrum-font-size-xs);
+  color: var(--spectrum-color-text-secondary);
+}
+
+.commentText {
+  margin: 0;
+  font-size: var(--spectrum-font-size-sm);
+  color: var(--spectrum-color-text-primary);
+  overflow-wrap: break-word;
+}
+
+.commentForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spectrum-space-3);
+  align-items: flex-start;
+}
+
+/* --------------------------------------------------------------------------
+   Toolbar: search + filters above data tables
+   -------------------------------------------------------------------------- */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spectrum-space-3);
+  margin-bottom: var(--spectrum-space-4);
+}
+
+/* Search box with a leading magnifier icon. */
+.searchBox {
+  position: relative;
+  flex: 1 1 260px;
+  min-width: 200px;
+  max-width: 420px;
+}
+
+.searchBox svg {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--spectrum-color-neutral-400);
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  padding: var(--spectrum-space-2) var(--spectrum-space-3) var(--spectrum-space-2) 38px;
+  font-family: var(--spectrum-font-family);
+  font-size: var(--spectrum-font-size-sm);
+  color: var(--spectrum-color-text-primary);
+  background-color: var(--spectrum-color-white);
+  border: 1px solid var(--spectrum-color-neutral-300);
+  border-radius: var(--spectrum-radius-md);
+  transition: border-color var(--spectrum-transition-fast) ease,
+    box-shadow var(--spectrum-transition-fast) ease;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--spectrum-color-primary);
+  box-shadow: 0 0 0 3px rgba(0, 89, 184, 0.18);
+}
+
+.filterSelect {
+  padding: var(--spectrum-space-2) var(--spectrum-space-3);
+  font-family: var(--spectrum-font-family);
+  font-size: var(--spectrum-font-size-sm);
+  color: var(--spectrum-color-text-primary);
+  background-color: var(--spectrum-color-white);
+  border: 1px solid var(--spectrum-color-neutral-300);
+  border-radius: var(--spectrum-radius-md);
+  cursor: pointer;
+}
+
+.filterSelect:focus {
+  outline: none;
+  border-color: var(--spectrum-color-primary);
+  box-shadow: 0 0 0 3px rgba(0, 89, 184, 0.18);
+}
+
+/* Count of visible/total rows, right-aligned in the toolbar. */
+.resultCount {
+  margin-left: auto;
+  font-size: var(--spectrum-font-size-sm);
+  color: var(--spectrum-color-text-secondary);
+  white-space: nowrap;
+}
+
+/* "Clear filters" button — appears when any search/filter/sort is active. */
+.clearBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  appearance: none;
+  border: 1px solid var(--spectrum-color-card-border);
+  background: var(--spectrum-color-white);
+  border-radius: var(--spectrum-radius-md);
+  padding: var(--spectrum-space-2) var(--spectrum-space-3);
+  font-family: var(--spectrum-font-family);
+  font-size: var(--spectrum-font-size-sm);
+  font-weight: var(--spectrum-font-weight-medium);
+  color: var(--spectrum-color-text-secondary);
+  cursor: pointer;
+  transition: background-color var(--spectrum-transition-fast) ease,
+    color var(--spectrum-transition-fast) ease,
+    border-color var(--spectrum-transition-fast) ease;
+}
+
+.clearBtn:hover {
+  border-color: var(--spectrum-color-error);
+  color: var(--spectrum-color-error);
+  background-color: var(--spectrum-color-error-light);
+}
+
+.clearBtn:focus-visible {
+  outline: 2px solid var(--spectrum-color-primary);
+  outline-offset: 2px;
+}
+
+/* When the clear button is present, keep the result count from eating the
+   auto margin so both sit neatly at the end. */
+.toolbar .clearBtn + .resultCount,
+.toolbar .resultCount + .clearBtn {
+  margin-left: var(--spectrum-space-2);
+}
+
+/* Clickable table rows that navigate to a detail view. */
+.clickableRow {
+  cursor: pointer;
+}
+
+.clickableRow:hover {
+  background-color: var(--spectrum-color-info-light);
+}
+
+/* Right-align numeric cells for tidy columns. */
+.numCell {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Quick-fill preset buttons (trend analysis). */
+.presetRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spectrum-space-2);
+  margin-bottom: var(--spectrum-space-4);
+}
+
+/* Status pill used in ticket tables/detail. */
+.statusPill {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: var(--spectrum-radius-full);
+  font-size: var(--spectrum-font-size-xs);
+  font-weight: var(--spectrum-font-weight-semibold);
+  text-transform: capitalize;
+}
+
+.statusOpen {
+  background-color: var(--spectrum-color-info-light);
+  color: var(--spectrum-color-info-text);
+}
+
+.statusProgress {
+  background-color: var(--spectrum-color-warning-light);
+  color: var(--spectrum-color-warning-text);
+}
+
+.statusResolved {
+  background-color: var(--spectrum-color-success-light);
+  color: var(--spectrum-color-success-text);
+}
+
+/* Linked-feedback list on the ticket detail page. */
+.linkedList {
+  list-style: none;
+  margin: var(--spectrum-space-2) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spectrum-space-2);
+}
+
+.linkedItem {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spectrum-space-3);
+  padding: var(--spectrum-space-3);
+  border: 1px solid var(--spectrum-color-neutral-200);
+  border-radius: var(--spectrum-radius-md);
+}
+
+.linkedBody {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Full feedback text, wrapped (no truncation). */
+.linkedText {
+  margin: 0;
+  font-size: var(--spectrum-font-size-sm);
+  color: var(--spectrum-color-text-primary);
+  line-height: var(--spectrum-line-height-normal);
+  overflow-wrap: anywhere;
+}
+
+.linkedMeta {
+  font-size: var(--spectrum-font-size-xs);
+  color: var(--spectrum-color-text-secondary);
+  text-transform: capitalize;
+}
+
+.linkedLink {
+  flex-shrink: 0;
+  color: var(--spectrum-color-primary);
+  font-weight: var(--spectrum-font-weight-medium);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.linkedLink:hover {
+  text-decoration: underline;
 }

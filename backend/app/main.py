@@ -58,10 +58,35 @@ def _log_nlp_readiness() -> None:
         )
 
 
+def _bootstrap_admin() -> None:
+    """Ensure an admin account exists from environment configuration.
+
+    In production the admin credentials are supplied via ``ADMIN_USERNAME`` and
+    ``ADMIN_PASSWORD`` env vars (never hardcoded). When both are present the
+    admin user is created/updated on startup. When absent, nothing is seeded so
+    local/dev databases keep whatever admin they already have.
+    """
+    username = os.environ.get("ADMIN_USERNAME", "").strip()
+    password = os.environ.get("ADMIN_PASSWORD", "").strip()
+    if not (username and password):
+        logger.info(
+            "Admin bootstrap skipped (ADMIN_USERNAME/ADMIN_PASSWORD not set)."
+        )
+        return
+    try:
+        from app.services.auth_service import AuthService
+
+        AuthService().create_admin(username, password)
+        logger.info("Admin user '%s' ensured from environment.", username)
+    except Exception:  # pragma: no cover - never block startup on seeding
+        logger.exception("Failed to bootstrap admin user from environment")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan: initialize database on startup."""
     init_db()
+    _bootstrap_admin()
     _log_nlp_readiness()
     yield
 
@@ -73,11 +98,17 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS configuration — allow React dev server and production origins
+# CORS configuration — allow the React dev server plus any production origin
+# supplied via FRONTEND_ORIGIN. In the recommended single-service deploy the
+# frontend is served same-origin, so CORS is not needed there; this stays for
+# split-hosting or local dev.
 origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
 ]
+_extra_origin = os.environ.get("FRONTEND_ORIGIN", "").strip()
+if _extra_origin:
+    origins.append(_extra_origin)
 
 app.add_middleware(
     CORSMiddleware,
@@ -90,11 +121,11 @@ app.add_middleware(
 
 # Router includes
 from app.routes.auth import router as auth_router
-from app.routes.submissions import router as submissions_router
+from app.routes.feedback import router as feedback_router
 from app.routes.admin import router as admin_router
 
 app.include_router(auth_router, prefix="/api/auth")
-app.include_router(submissions_router, prefix="/api")
+app.include_router(feedback_router, prefix="/api")
 app.include_router(admin_router, prefix="/api/admin")
 
 
@@ -102,3 +133,35 @@ app.include_router(admin_router, prefix="/api/admin")
 async def health_check():
     """Health check endpoint."""
     return {"status": "ok"}
+
+
+# --------------------------------------------------------------------------- #
+# Serve the built frontend (single-service production deploy).
+#
+# When the Vite build output exists at ../frontend/dist, mount it so FastAPI
+# serves the SPA on the same origin as the API (no CORS needed). Hashed assets
+# are served from /assets; every other non-API path falls back to index.html so
+# client-side routes (e.g. /admin/dashboard) resolve. In local dev the dist
+# folder is absent, so this block is skipped and Vite serves the frontend.
+# --------------------------------------------------------------------------- #
+_FRONTEND_DIST = _BACKEND_DIR.parent / "frontend" / "dist"
+if _FRONTEND_DIST.is_dir():
+    from fastapi.staticfiles import StaticFiles
+    from fastapi.responses import FileResponse
+
+    _assets_dir = _FRONTEND_DIST / "assets"
+    if _assets_dir.is_dir():
+        app.mount("/assets", StaticFiles(directory=str(_assets_dir)), name="assets")
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def spa_fallback(full_path: str):
+        """Serve a static file when it exists, else the SPA entry point.
+
+        Registered after the API routers, so /api/* and /health always win.
+        """
+        candidate = _FRONTEND_DIST / full_path
+        if full_path and candidate.is_file():
+            return FileResponse(str(candidate))
+        return FileResponse(str(_FRONTEND_DIST / "index.html"))
+
+    logger.info("Serving built frontend from %s", _FRONTEND_DIST)

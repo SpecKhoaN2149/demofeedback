@@ -1,0 +1,57 @@
+/**
+ * Layout + card chrome for the light dashboard analytics charts.
+ */
+
+.chartGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  gap: var(--spectrum-space-5);
+}
+
+/* Clean white card matching the dashboard surfaces. */
+.chartCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: var(--spectrum-space-5);
+  border-radius: var(--spectrum-radius-lg);
+  background: var(--spectrum-color-white);
+  border: 1px solid var(--spectrum-color-card-border);
+  box-shadow: var(--spectrum-shadow-sm);
+  transition: box-shadow var(--spectrum-transition-fast) ease;
+}
+
+.chartCard:hover {
+  box-shadow: var(--spectrum-shadow-md);
+}
+
+.chartHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--spectrum-space-3);
+  margin-bottom: var(--spectrum-space-4);
+}
+
+.chartTitle {
+  font-size: var(--spectrum-font-size-base);
+  font-weight: var(--spectrum-font-weight-semibold);
+  color: var(--spectrum-color-text-primary);
+  margin: 0;
+}
+
+.chartMeta {
+  font-size: var(--spectrum-font-size-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--spectrum-color-text-secondary);
+}
+
+.empty {
+  color: var(--spectrum-color-text-secondary);
+  font-size: var(--spectrum-font-size-sm);
+  padding: var(--spectrum-space-8) 0;
+  text-align: center;
+}

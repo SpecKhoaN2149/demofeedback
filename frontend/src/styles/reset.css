@@ -34,6 +34,12 @@ body {
      (Requirement 14.5, Property 12). */
   overflow-x: hidden;
   max-width: 100%;
+  /* Soft blue → mint gradient backdrop shared by every page. Fixed so it does
+     not scroll, and min-height so short pages still fill the viewport. */
+  min-height: 100vh;
+  color: var(--spectrum-color-text-primary);
+  background: var(--spectrum-gradient-bg);
+  background-attachment: fixed;
 }
 
 html {

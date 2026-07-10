@@ -72,3 +72,55 @@
     width: 100%;
   }
 }
+
+/* --------------------------------------------------------------------------
+   Post-submit success view: prominently show the feedback ID
+   -------------------------------------------------------------------------- */
+.idLabel {
+  margin-top: var(--spectrum-space-6);
+  font-size: var(--spectrum-font-size-xs);
+  font-weight: var(--spectrum-font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--spectrum-color-text-secondary);
+  text-align: center;
+}
+
+.idBox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spectrum-space-3);
+  flex-wrap: wrap;
+  margin-top: var(--spectrum-space-2);
+  padding: var(--spectrum-space-3) var(--spectrum-space-4);
+  background-color: var(--spectrum-color-surface);
+  border: 1px solid var(--spectrum-color-card-border);
+  border-radius: var(--spectrum-radius-md);
+}
+
+.idValue {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: var(--spectrum-font-size-base);
+  font-weight: var(--spectrum-font-weight-semibold);
+  color: var(--spectrum-color-text-primary);
+  word-break: break-all;
+}
+
+.idActions {
+  display: flex;
+  gap: var(--spectrum-space-3);
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: var(--spectrum-space-6);
+}
+
+@media (max-width: 767.98px) {
+  .idActions {
+    flex-direction: column;
+  }
+
+  .idActions button {
+    width: 100%;
+  }
+}

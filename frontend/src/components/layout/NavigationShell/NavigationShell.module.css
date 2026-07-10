@@ -8,7 +8,8 @@
   grid-template-rows: auto 1fr auto;
   min-height: 100vh;
   font-family: var(--spectrum-font-family);
-  background-color: var(--spectrum-color-background);
+  /* Transparent so the global gradient backdrop (body) shows through. */
+  background: transparent;
 }
 
 /*

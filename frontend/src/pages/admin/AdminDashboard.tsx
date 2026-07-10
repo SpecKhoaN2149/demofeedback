@@ -1,39 +1,91 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { getDashboard, type DashboardResponse, ApiError } from '../../api/client'
+import { getAnalytics, type AnalyticsResponse, ApiError } from '../../api/client'
 import AdminLayout from '../../components/layout/AdminLayout/AdminLayout'
-import Card from '../../components/ui/Card/Card'
-import EnrichmentStatusBadge, {
-  type EnrichmentStatus,
-} from '../../components/nlp/EnrichmentStatusBadge'
-import styles from './admin.module.css'
+import DashboardCharts from '../../components/charts/DashboardCharts'
+import FeedbackMap from '../../components/charts/FeedbackMap'
+import FeedbackTable from '../../components/admin/FeedbackTable'
+import { CHART } from '../../components/charts/chartTheme'
+import styles from './dashboard.module.css'
 
-/** Maps a sentiment key to its stat-card top-border color modifier class. */
-const SENTIMENT_BORDER: Record<string, string> = {
-  negative: styles.borderNegative,
-  positive: styles.borderPositive,
-  neutral: styles.borderNeutral,
+/** Human-friendly labels for triage outcomes and the null/unclassified bucket. */
+const TRIAGE_LABELS: Record<string, string> = {
+  action_required: 'Action required',
+  no_action: 'No action',
+  unclassified: 'Awaiting review',
+}
+
+/** Accent color per sentiment bucket for the neon KPI top-bar. */
+const SENTIMENT_ACCENT: Record<string, string> = {
+  negative: CHART.red,
+  neutral: CHART.neutral,
+  positive: CHART.green,
+}
+
+const TRIAGE_ACCENT: Record<string, string> = {
+  action_required: CHART.orange,
+  no_action: CHART.teal,
+  unclassified: CHART.violet,
+}
+
+/** A single accent-topped KPI tile. When `to` is set it becomes a link. */
+function Kpi({
+  value,
+  label,
+  hint,
+  accent,
+  to,
+}: {
+  value: string | number
+  label: string
+  hint?: string
+  accent: string
+  /** Optional route — renders the tile as a clickable link when provided. */
+  to?: string
+}) {
+  const style = { ['--kpi-accent' as string]: accent }
+  const inner = (
+    <>
+      <div className={styles.kpiValue}>{value}</div>
+      <div className={styles.kpiLabel}>{label}</div>
+      {hint && <div className={styles.kpiHint}>{hint}</div>}
+    </>
+  )
+
+  if (to) {
+    return (
+      <Link to={to} className={`${styles.kpi} ${styles.kpiLink}`} style={style}>
+        {inner}
+        <span className={styles.kpiArrow} aria-hidden="true">→</span>
+      </Link>
+    )
+  }
+
+  return (
+    <div className={styles.kpi} style={style}>
+      {inner}
+    </div>
+  )
 }
 
 export default function AdminDashboard() {
   const { token } = useAuth()
-  const [data, setData] = useState<DashboardResponse | null>(null)
+  const [data, setData] = useState<AnalyticsResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
 
-    async function fetchDashboard() {
+    async function fetchAnalytics() {
       if (!token) return
       setLoading(true)
       setError(null)
 
       try {
-        const response = await getDashboard(token)
-        if (!cancelled) {
-          setData(response)
-        }
+        const response = await getAnalytics(token)
+        if (!cancelled) setData(response)
       } catch (err) {
         if (!cancelled) {
           if (err instanceof ApiError) {
@@ -43,22 +95,38 @@ export default function AdminDashboard() {
           }
         }
       } finally {
-        if (!cancelled) {
-          setLoading(false)
-        }
+        if (!cancelled) setLoading(false)
       }
     }
 
-    fetchDashboard()
-    return () => { cancelled = true }
+    fetchAnalytics()
+    return () => {
+      cancelled = true
+    }
   }, [token])
+
+  const renderHeader = (subtitle: string) => (
+    <div className={styles.header}>
+      <div>
+        <h1 className={styles.title}>
+          <span className={styles.titleAccent} aria-hidden="true" />
+          Admin Dashboard
+        </h1>
+        <p className={styles.subtitle}>{subtitle}</p>
+      </div>
+      <span className={styles.livePill}>
+        <span className={styles.liveDot} aria-hidden="true" />
+        Live
+      </span>
+    </div>
+  )
 
   if (loading) {
     return (
       <AdminLayout>
-        <div className={`admin-dashboard ${styles.page}`}>
-          <h1>Admin Dashboard</h1>
-          <p>Loading dashboard…</p>
+        <div className={styles.canvas}>
+          {renderHeader('Loading analytics…')}
+          <p className={styles.stateMsg}>Loading dashboard…</p>
         </div>
       </AdminLayout>
     )
@@ -67,8 +135,8 @@ export default function AdminDashboard() {
   if (error) {
     return (
       <AdminLayout>
-        <div className={`admin-dashboard ${styles.page}`}>
-          <h1>Admin Dashboard</h1>
+        <div className={styles.canvas}>
+          {renderHeader('Feedback intelligence overview')}
           <div className={styles.error} role="alert">{error}</div>
         </div>
       </AdminLayout>
@@ -78,170 +146,111 @@ export default function AdminDashboard() {
   if (!data) {
     return (
       <AdminLayout>
-        <div className={`admin-dashboard ${styles.page}`}>
-          <h1>Admin Dashboard</h1>
-          <p>No data available.</p>
+        <div className={styles.canvas}>
+          {renderHeader('Feedback intelligence overview')}
+          <p className={styles.stateMsg}>No data available.</p>
         </div>
       </AdminLayout>
     )
   }
 
-  const { by_sentiment, by_progress_state, top_categories } = data
-
-  const totalSubmissions =
-    Object.values(by_sentiment).reduce((sum, count) => sum + count, 0)
-
-  const statusCounts = data.enrichment_status_counts ?? {}
-  const topThemes = data.top_themes ?? []
-  const byLanguage = data.by_language ?? {}
-  const avgSeverity = data.average_severity ?? null
-  const hasNlp =
-    Object.keys(statusCounts).length > 0 ||
-    topThemes.length > 0 ||
-    Object.keys(byLanguage).length > 0 ||
-    avgSeverity != null
-  const statusOrder: EnrichmentStatus[] = [
-    'completed',
-    'pending',
-    'failed',
-    'timeout',
-  ]
+  // Defensive defaults so a missing field can never crash the render.
+  const bySentiment = data.by_sentiment ?? {}
+  const byTriage = data.by_triage_outcome ?? {}
+  const totals = data.totals ?? { total: 0, tickets_linked: 0, needs_review: 0 }
+  const total =
+    totals.total ?? Object.values(bySentiment).reduce((sum, n) => sum + n, 0)
 
   return (
     <AdminLayout>
-      <div className={`admin-dashboard ${styles.page}`}>
-        <h1>Admin Dashboard</h1>
+      <div className={styles.canvas}>
+        {renderHeader('Feedback intelligence across every channel')}
 
-        <section aria-labelledby="sentiment-heading">
-          <h2 id="sentiment-heading">Submissions by Sentiment</h2>
-          {totalSubmissions === 0 ? (
-            <p>No submissions yet.</p>
+        {/* All feedback table */}
+        <section className={styles.section} aria-labelledby="all-feedback-heading">
+          <h2 id="all-feedback-heading" className={styles.sectionTitle}>All Feedback</h2>
+          <FeedbackTable />
+        </section>
+
+        {/* Primary KPIs */}
+        <section className={styles.section} aria-labelledby="overview-heading">
+          <h2 id="overview-heading" className={styles.sectionTitle}>Overview</h2>
+          <div className={styles.kpiGrid}>
+            <Kpi value={total} label="Total Feedback" accent={CHART.cyan} />
+            <Kpi
+              value={totals.tickets_linked}
+              label="Linked to Tickets"
+              accent={CHART.primary}
+            />
+            <Kpi
+              value={totals.needs_review}
+              label="Needs Review"
+              accent={CHART.amber}
+              to="/admin/queue"
+            />
+            <Kpi
+              value={data.average_severity != null ? `${data.average_severity}` : '—'}
+              label="Avg Severity"
+              hint="scale 1–10"
+              accent={CHART.orange}
+            />
+          </div>
+        </section>
+
+        {/* Charts */}
+        <section className={styles.section} aria-labelledby="charts-heading">
+          <h2 id="charts-heading" className={styles.sectionTitle}>Analytics</h2>
+          <DashboardCharts analytics={data} />
+        </section>
+
+        {/* Map */}
+        <section className={styles.section} aria-labelledby="map-heading">
+          <h2 id="map-heading" className={styles.sectionTitle}>Trends by Location</h2>
+          <FeedbackMap points={data.map_points ?? []} byState={data.by_state ?? []} />
+        </section>
+
+        {/* Sentiment breakdown */}
+        <section className={styles.section} aria-labelledby="sentiment-heading">
+          <h2 id="sentiment-heading" className={styles.sectionTitle}>Feedback by Sentiment</h2>
+          {Object.keys(bySentiment).length === 0 ? (
+            <p className={styles.empty}>No feedback yet.</p>
           ) : (
-            <div className={styles.statGrid}>
-              {/* Total submissions — blue top border. */}
-              <Card bordered className={`${styles.statCard} ${styles.borderTotal}`}>
-                <div className={styles.statValue}>{totalSubmissions}</div>
-                <div className={styles.statLabel}>Total Submissions</div>
-              </Card>
-
-              {/* One card per sentiment with a sentiment-colored top border. */}
-              {Object.entries(by_sentiment).map(([sentiment, count]) => (
-                <Card
+            <div className={styles.kpiGrid}>
+              {Object.entries(bySentiment).map(([sentiment, count]) => (
+                <Kpi
                   key={sentiment}
-                  bordered
-                  className={`${styles.statCard} ${SENTIMENT_BORDER[sentiment] ?? styles.borderNeutral}`}
-                >
-                  <div className={styles.statValue}>{count}</div>
-                  <div className={styles.statLabel}>{sentiment}</div>
-                </Card>
+                  value={count}
+                  label={sentiment}
+                  accent={SENTIMENT_ACCENT[sentiment] ?? CHART.neutral}
+                  to={
+                    ['negative', 'neutral', 'positive'].includes(sentiment)
+                      ? `/admin/queue?sentiment=${sentiment}`
+                      : undefined
+                  }
+                />
               ))}
             </div>
           )}
         </section>
 
-        <section aria-labelledby="progress-heading">
-          <h2 id="progress-heading">Submissions by Progress State</h2>
-          {Object.keys(by_progress_state).length === 0 ? (
-            <p>No progress data available.</p>
+        {/* Action-status breakdown */}
+        <section className={styles.section} aria-labelledby="triage-heading">
+          <h2 id="triage-heading" className={styles.sectionTitle}>Feedback by Action Status</h2>
+          {Object.keys(byTriage).length === 0 ? (
+            <p className={styles.empty}>No data available.</p>
           ) : (
-            <div className={styles.tableWrapper}>
-              <table className={styles.table} aria-label="Counts by progress state">
-                <thead>
-                  <tr>
-                    <th>Progress State</th>
-                    <th>Submissions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {Object.entries(by_progress_state).map(([state, count]) => (
-                    <tr key={state}>
-                      <td>{state}%</td>
-                      <td>{count} {count === 1 ? 'submission' : 'submissions'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
-
-        <section aria-labelledby="categories-heading">
-          <h2 id="categories-heading">Top Issue Categories</h2>
-          {top_categories.length === 0 ? (
-            <p>No negative submissions to rank.</p>
-          ) : (
-            <ol aria-label="Top 5 issue categories by frequency">
-              {top_categories.slice(0, 5).map(({ category, count }) => (
-                <li key={category}>
-                  {category} — {count} {count === 1 ? 'submission' : 'submissions'}
-                </li>
+            <div className={styles.kpiGrid}>
+              {Object.entries(byTriage).map(([outcome, count]) => (
+                <Kpi
+                  key={outcome}
+                  value={count}
+                  label={TRIAGE_LABELS[outcome] ?? outcome}
+                  accent={TRIAGE_ACCENT[outcome] ?? CHART.neutral}
+                />
               ))}
-            </ol>
+            </div>
           )}
         </section>
-
-        {hasNlp && (
-          <section aria-labelledby="nlp-heading">
-            <h2 id="nlp-heading">NLP Insights</h2>
-
-            <div className={styles.statGrid}>
-              {statusOrder
-                .filter((s) => statusCounts[s] != null)
-                .map((s) => (
-                  <Card key={s} bordered className={styles.statCard}>
-                    <div className={styles.statValue}>{statusCounts[s]}</div>
-                    <div className={styles.statLabel}>
-                      <EnrichmentStatusBadge status={s} />
-                    </div>
-                  </Card>
-                ))}
-              {avgSeverity != null && (
-                <Card bordered className={`${styles.statCard} ${styles.borderNegative}`}>
-                  <div className={styles.statValue}>{avgSeverity} / 5</div>
-                  <div className={styles.statLabel}>Average severity</div>
-                </Card>
-              )}
-            </div>
-
-            <h3>Top themes</h3>
-            {topThemes.length === 0 ? (
-              <p>No themes detected yet.</p>
-            ) : (
-              <div className={styles.themeCloud}>
-                {topThemes.map(({ theme, count }) => (
-                  <span key={theme} className={styles.themeCloudChip}>
-                    {theme}
-                    <span className={styles.themeCloudCount}>{count}</span>
-                  </span>
-                ))}
-              </div>
-            )}
-
-            {Object.keys(byLanguage).length > 0 && (
-              <>
-                <h3>Languages detected</h3>
-                <div className={styles.tableWrapper}>
-                  <table className={styles.table} aria-label="Detected languages">
-                    <thead>
-                      <tr>
-                        <th>Language</th>
-                        <th>Submissions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {Object.entries(byLanguage).map(([lang, count]) => (
-                        <tr key={lang}>
-                          <td>{lang.toUpperCase()}</td>
-                          <td>{count}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </>
-            )}
-          </section>
-        )}
       </div>
     </AdminLayout>
   )

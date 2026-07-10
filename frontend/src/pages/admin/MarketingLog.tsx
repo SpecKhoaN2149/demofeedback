@@ -1,28 +1,45 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { getMarketing, ApiError, type MarketingListResponse, type MarketingEntry } from '../../api/client'
+import {
+  getMarketing,
+  ApiError,
+  type MarketingListResponse,
+  type MarketingEntry,
+} from '../../api/client'
 import AdminLayout from '../../components/layout/AdminLayout/AdminLayout'
 import Button from '../../components/ui/Button/Button'
+import SortHeader from '../../components/ui/SortHeader'
+import { useSort, type SortGetter } from '../../hooks/useSort'
+import { sourceDisplay } from '../../utils/sourceDisplay'
 import styles from './admin.module.css'
 
 const PAGE_SIZE = 20
+
+// Module-level so the sort memo stays stable across renders.
+const MARKETING_SORT: Record<string, SortGetter<MarketingEntry>> = {
+  text: (e) => e.text,
+  source: (e) => e.platform ?? e.source_type,
+  created_at: (e) => e.created_at,
+}
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleString()
 }
 
-function statusLabel(entry: MarketingEntry): string {
-  if (entry.social_status === 'shared') return 'shared'
-  if (entry.social_status === 'generation_failed') return 'generation_failed'
-  return 'internal_only'
-}
-
 export default function MarketingLog() {
   const { token } = useAuth()
+  const navigate = useNavigate()
   const [data, setData] = useState<MarketingListResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [offset, setOffset] = useState(0)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [search, setSearch] = useState(searchParams.get('q') ?? '')
+  const paramSort = searchParams.get('sort')
+  const initialSortKey =
+    paramSort && MARKETING_SORT[paramSort] ? paramSort : 'created_at'
+  const initialSortDir = searchParams.get('dir') === 'asc' ? 'asc' : 'desc'
 
   const fetchMarketing = useCallback(async () => {
     if (!token) return
@@ -49,6 +66,41 @@ export default function MarketingLog() {
 
   const totalPages = data ? Math.ceil(data.total / PAGE_SIZE) : 0
   const currentPage = Math.floor(offset / PAGE_SIZE) + 1
+
+  const filteredItems = useMemo(() => {
+    if (!data) return []
+    const q = search.trim().toLowerCase()
+    if (!q) return data.items
+    return data.items.filter((e) =>
+      [e.text, e.source_type, e.platform ?? ''].join(' ').toLowerCase().includes(q)
+    )
+  }, [data, search])
+
+  const { sorted, sortKey, sortDir, toggleSort, setSort } = useSort(
+    filteredItems,
+    MARKETING_SORT,
+    initialSortKey,
+    initialSortDir
+  )
+
+  const filtersActive =
+    search.trim() !== '' || sortKey !== 'created_at' || sortDir !== 'desc'
+
+  function clearFilters() {
+    setSearch('')
+    setSort('created_at', 'desc')
+  }
+
+  // Persist search/sort to the URL (replace) for shareable views.
+  useEffect(() => {
+    const p: Record<string, string> = {}
+    if (search.trim()) p.q = search.trim()
+    if (sortKey) {
+      p.sort = sortKey
+      p.dir = sortDir
+    }
+    setSearchParams(p, { replace: true })
+  }, [search, sortKey, sortDir, setSearchParams])
 
   function goToPage(page: number) {
     setOffset((page - 1) * PAGE_SIZE)
@@ -82,7 +134,8 @@ export default function MarketingLog() {
       <AdminLayout>
         <div className={`marketing-log ${styles.page}`}>
           <h1>Marketing Log</h1>
-          <p>No positive submissions logged yet.</p>
+          <p className={styles.subtitle}>Positive feedback, suitable for marketing</p>
+          <p>No positive feedback logged yet.</p>
         </div>
       </AdminLayout>
     )
@@ -92,26 +145,76 @@ export default function MarketingLog() {
     <AdminLayout>
       <div className={`marketing-log ${styles.page}`}>
         <h1>Marketing Log</h1>
+        <p className={styles.subtitle}>Positive feedback, suitable for marketing</p>
+
+        <div className={styles.toolbar}>
+          <div className={styles.searchBox}>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="7" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input
+              type="search"
+              className={styles.searchInput}
+              placeholder="Search feedback text or source…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              aria-label="Search marketing log"
+            />
+          </div>
+          {filtersActive && (
+            <button type="button" className={styles.clearBtn} onClick={clearFilters}>
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+              Clear filters
+            </button>
+          )}
+          <span className={styles.resultCount}>
+            {filteredItems.length} of {data.items.length} shown
+          </span>
+        </div>
 
         <div className={styles.tableWrapper}>
-          <table className={styles.table} aria-label="Positive submissions marketing log">
+          <table className={styles.table} aria-label="Positive feedback marketing log">
             <thead>
               <tr>
-                <th>Customer Name</th>
-                <th>Praise</th>
-                <th>Timestamp</th>
-                <th>Sharing Status</th>
+                <SortHeader label="Feedback" colKey="text" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+                <SortHeader label="Source" colKey="source" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+                <SortHeader label="Timestamp" colKey="created_at" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+                <th>Original</th>
               </tr>
             </thead>
             <tbody>
-              {data.items.map((entry) => (
-                <tr key={entry.submission_id}>
-                  <td>{entry.customer_name}</td>
-                  <td>{entry.praise_text}</td>
-                  <td>{formatDate(entry.logged_at)}</td>
-                  <td>{statusLabel(entry)}</td>
+              {sorted.length === 0 && (
+                <tr>
+                  <td colSpan={4} className={styles.nlpEmpty}>
+                    No feedback matches your search.
+                  </td>
                 </tr>
-              ))}
+              )}
+              {sorted.map((entry) => {
+                const src = sourceDisplay(entry)
+                return (
+                  <tr
+                    key={entry.feedback_id}
+                    className={styles.clickableRow}
+                    onClick={() => navigate(`/admin/feedback/${entry.feedback_id}`)}
+                  >
+                    <td className={styles.commentCell}>{entry.text}</td>
+                    <td>
+                      {src.label}
+                      {src.detail ? ` · ${src.detail}` : ''}
+                    </td>
+                    <td>{formatDate(entry.created_at)}</td>
+                    <td onClick={(e) => e.stopPropagation()}>
+                      <Link className={styles.rowLink} to={`/admin/feedback/${entry.feedback_id}`}>
+                        View feedback →
+                      </Link>
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
