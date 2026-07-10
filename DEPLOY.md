@@ -62,6 +62,60 @@ docker run -p 8000:8000 \
 # open http://localhost:8000
 ```
 
+## Backing up the database
+
+All feedback, tickets, and comments live in the single SQLite file on the
+persistent disk (`/data/submissions.db`). Back it up regularly so a disk problem
+or accidental deletion doesn't lose data.
+
+**Use SQLite's online backup**, not a plain file copy — the app writes in WAL
+mode, so copying the `.db` file alone can miss recent writes or capture a
+half-written state. The online backup produces a consistent snapshot even while
+the app is running.
+
+The runtime image ships Python (not the `sqlite3` CLI), so use the stdlib
+backup API — this works from the container shell as-is:
+
+```bash
+# From a shell on the running service (Render dashboard → service → "Shell"):
+python -c "import sqlite3,datetime; \
+src=sqlite3.connect('/data/submissions.db'); \
+dst=sqlite3.connect('/data/backup-%s.db' % datetime.date.today()); \
+src.backup(dst); dst.close(); src.close(); print('backup done')"
+```
+
+(If you're on a VM with the `sqlite3` CLI installed, the equivalent is
+`sqlite3 /data/submissions.db ".backup '/data/backup-$(date +%F).db'"`.)
+
+Then download the snapshot (Render dashboard → **Disks** → browse/download, or
+`scp`/rsync on a VM), or push it to object storage (S3/GCS/Backblaze):
+
+```bash
+# Example: copy the latest snapshot off the box to S3 (requires AWS CLI + creds)
+aws s3 cp "/data/backup-$(date +%F).db" "s3://YOUR_BUCKET/venting-machine/"
+```
+
+### Automating it
+
+- **Render Cron Job**: add a scheduled job (its own service) that mounts the
+  same disk and runs the `.backup` + upload commands daily. Point it at the same
+  `/data` disk and give it your storage credentials as env vars.
+- **VM (cron)**: drop the two commands into a script and schedule it, e.g.
+  `0 3 * * * /opt/venting-machine/backup.sh` for a daily 03:00 backup.
+- Keep a rolling window (e.g. delete snapshots older than 30 days) so backups
+  don't fill the disk.
+
+### Restoring
+
+Stop the service (or scale to zero), then replace the live DB with a snapshot
+and restart:
+
+```bash
+cp /data/backup-YYYY-MM-DD.db /data/submissions.db
+# remove stale WAL/SHM sidecars so SQLite rebuilds them from the restored file
+rm -f /data/submissions.db-wal /data/submissions.db-shm
+```
+
 ## Notes & gotchas
 
 - **Persistence:** the SQLite file must stay on the mounted disk (`/data`). If
