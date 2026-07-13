@@ -599,6 +599,26 @@
   color: var(--spectrum-color-success-text);
 }
 
+/* Destructive action button (delete). */
+.dangerBtn {
+  color: var(--spectrum-color-error) !important;
+  border-color: var(--spectrum-color-error) !important;
+  background-color: transparent !important;
+}
+
+.dangerBtn:hover {
+  background-color: var(--spectrum-color-error-light) !important;
+}
+
+/* Top action row: Back on the left, destructive action on the right. */
+.detailActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spectrum-space-3);
+  margin-bottom: var(--spectrum-space-4);
+}
+
 /* Linked-feedback list on the ticket detail page. */
 .linkedList {
   list-style: none;

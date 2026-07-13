@@ -7,6 +7,7 @@ import {
   listComments,
   createComment,
   getAdminFeedback,
+  deleteTicket,
   type TicketDetail as TicketDetailModel,
   type TicketComment,
   type FeedbackRow,
@@ -56,6 +57,26 @@ export default function TicketDetail() {
   const [newComment, setNewComment] = useState('')
   const [posting, setPosting] = useState(false)
   const [postError, setPostError] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
+
+  async function handleDelete() {
+    if (!token || !ticket) return
+    const n = ticket.feedback_ids.length
+    const message = `Permanently delete this ticket, its comments, and the ${n} feedback ${
+      n === 1 ? 'record' : 'records'
+    } linked to it? This cannot be undone.`
+    if (!window.confirm(message)) return
+    setDeleting(true)
+    try {
+      await deleteTicket(token, String(ticket.ticket_id))
+      navigate('/admin/tickets')
+    } catch (err) {
+      setDeleting(false)
+      window.alert(
+        err instanceof ApiError ? `Delete failed: ${err.message}` : 'Delete failed. Please try again.'
+      )
+    }
+  }
 
   const loadTicket = useCallback(async () => {
     if (!token || !id) return
@@ -169,15 +190,28 @@ export default function TicketDetail() {
   return (
     <AdminLayout>
       <div className={styles.page}>
-        <Button
-          type="button"
-          variant="ghost"
-          size="small"
-          onClick={() => navigate(-1)}
-          className={styles.detailBack}
-        >
-          ← Back
-        </Button>
+        <div className={styles.detailActions}>
+          <Button
+            type="button"
+            variant="ghost"
+            size="small"
+            onClick={() => navigate(-1)}
+          >
+            ← Back
+          </Button>
+          {ticket && (
+            <Button
+              type="button"
+              variant="outline"
+              size="small"
+              className={styles.dangerBtn}
+              onClick={handleDelete}
+              disabled={deleting}
+            >
+              {deleting ? 'Deleting…' : 'Delete ticket'}
+            </Button>
+          )}
+        </div>
 
         <h1>Ticket detail</h1>
 

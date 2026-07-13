@@ -415,6 +415,52 @@ class FeedbackStore:
             )
             conn.commit()
 
+    def delete_ticket_and_feedback(self, ticket_id: uuid.UUID) -> dict:
+        """Delete a ticket together with everything attached to it.
+
+        Removes all feedback records linked to the ticket, the ticket's staff
+        comments, and the ticket itself. Feedback is deleted first so the
+        ``feedback.ticket_id`` foreign key never dangles during the operation.
+
+        Returns a dict with the number of feedback and ticket rows removed.
+        """
+        tid = str(ticket_id)
+        with get_connection() as conn:
+            n_fb = conn.execute(
+                "DELETE FROM feedback WHERE ticket_id = ?", (tid,)
+            ).rowcount
+            conn.execute("DELETE FROM ticket_comments WHERE ticket_id = ?", (tid,))
+            n_t = conn.execute(
+                "DELETE FROM tickets WHERE ticket_id = ?", (tid,)
+            ).rowcount
+            conn.commit()
+        return {"deleted_feedback": n_fb, "deleted_tickets": n_t}
+
+    def delete_feedback(self, feedback_id: uuid.UUID) -> dict:
+        """Delete a feedback record (and its ticket cluster, if linked).
+
+        If the feedback is linked to a ticket, the entire cluster is removed —
+        the ticket, its comments, and every feedback linked to it — so nothing
+        is left orphaned. If the feedback has no ticket, only that record is
+        deleted.
+
+        Returns a dict with the number of feedback and ticket rows removed, or
+        zeros when the feedback does not exist.
+        """
+        feedback = self.get(feedback_id)
+        if feedback is None:
+            return {"deleted_feedback": 0, "deleted_tickets": 0}
+
+        if feedback.ticket_id is not None:
+            return self.delete_ticket_and_feedback(feedback.ticket_id)
+
+        with get_connection() as conn:
+            n = conn.execute(
+                "DELETE FROM feedback WHERE feedback_id = ?", (str(feedback_id),)
+            ).rowcount
+            conn.commit()
+        return {"deleted_feedback": n, "deleted_tickets": 0}
+
     def get_status_view(self, feedback_id: uuid.UUID) -> StatusView | None:
         """Build the customer-facing status payload for a feedback record.
 

@@ -5,6 +5,7 @@ import {
   getAdminFeedback,
   listComments,
   createComment,
+  deleteFeedback,
   type FeedbackRow,
   type TicketComment,
   ApiError,
@@ -47,7 +48,28 @@ export default function FeedbackDetail() {
   const [posting, setPosting] = useState(false)
   const [postError, setPostError] = useState<string | null>(null)
 
+  const [deleting, setDeleting] = useState(false)
+
   const ticketId = feedback?.ticket_id ?? null
+
+  async function handleDelete() {
+    if (!token || !feedback) return
+    const linked = feedback.ticket_id != null
+    const message = linked
+      ? 'This feedback is linked to a ticket. Deleting it will also permanently delete that ticket, its comments, and every feedback linked to it. This cannot be undone. Continue?'
+      : 'Permanently delete this feedback? This cannot be undone.'
+    if (!window.confirm(message)) return
+    setDeleting(true)
+    try {
+      await deleteFeedback(token, feedback.feedback_id)
+      navigate('/admin/queue')
+    } catch (err) {
+      setDeleting(false)
+      window.alert(
+        err instanceof ApiError ? `Delete failed: ${err.message}` : 'Delete failed. Please try again.'
+      )
+    }
+  }
 
   // ── Load the feedback record ──────────────────────────────────────────────
   useEffect(() => {
@@ -136,15 +158,28 @@ export default function FeedbackDetail() {
   return (
     <AdminLayout>
       <div className={styles.page}>
-        <Button
-          type="button"
-          variant="ghost"
-          size="small"
-          onClick={() => navigate(-1)}
-          className={styles.detailBack}
-        >
-          ← Back
-        </Button>
+        <div className={styles.detailActions}>
+          <Button
+            type="button"
+            variant="ghost"
+            size="small"
+            onClick={() => navigate(-1)}
+          >
+            ← Back
+          </Button>
+          {feedback && (
+            <Button
+              type="button"
+              variant="outline"
+              size="small"
+              className={styles.dangerBtn}
+              onClick={handleDelete}
+              disabled={deleting}
+            >
+              {deleting ? 'Deleting…' : 'Delete feedback'}
+            </Button>
+          )}
+        </div>
 
         <h1>Feedback detail</h1>
 

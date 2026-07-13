@@ -346,6 +346,14 @@ async function apiPatch<T>(path: string, body: unknown, token?: string | null): 
   return handleResponse<T>(response)
 }
 
+async function apiDelete<T>(path: string, token?: string | null): Promise<T> {
+  const response = await fetch(`${BASE_URL}${path}`, {
+    method: 'DELETE',
+    headers: getAuthHeaders(token),
+  })
+  return handleResponse<T>(response)
+}
+
 // ─── Public API Methods ──────────────────────────────────────────────────────
 
 /** POST /api/feedback — Create a new feedback item (text + optional contact, NO sentiment) */
@@ -430,6 +438,22 @@ export function submitTriage(
 /** GET /api/admin/feedback/{id} — Full feedback record (admin) */
 export function getAdminFeedback(token: string, id: string): Promise<FeedbackRow> {
   return apiGet<FeedbackRow>(`/admin/feedback/${id}`, token)
+}
+
+/** Result of a delete operation: how many feedback/ticket rows were removed. */
+export interface DeleteResult {
+  deleted_feedback: number
+  deleted_tickets: number
+}
+
+/** DELETE /api/admin/feedback/{id} — Delete feedback (and its ticket cluster if linked) */
+export function deleteFeedback(token: string, id: string): Promise<DeleteResult> {
+  return apiDelete<DeleteResult>(`/admin/feedback/${id}`, token)
+}
+
+/** DELETE /api/admin/tickets/{id} — Delete a ticket + its comments + all linked feedback */
+export function deleteTicket(token: string, id: string): Promise<DeleteResult> {
+  return apiDelete<DeleteResult>(`/admin/tickets/${id}`, token)
 }
 
 /** GET /api/admin/feedback — List feedback rows (paginated) */

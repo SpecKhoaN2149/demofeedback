@@ -245,6 +245,36 @@ async def get_feedback(
     return feedback
 
 
+@router.delete("/feedback/{feedback_id}")
+async def delete_feedback(
+    feedback_id: str,
+    admin: AdminUser = Depends(require_admin),
+):
+    """Delete a feedback record and, if it's linked to a ticket, its cluster.
+
+    When the feedback has a linked ticket, the whole cluster is removed (the
+    ticket, its comments, and every feedback linked to it) so nothing dangles.
+    Returns 404 if the feedback does not exist.
+
+    Validates: Requirements 11.4
+    """
+    try:
+        parsed_id = uuid.UUID(feedback_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Feedback not found",
+        )
+
+    result = _feedback_store.delete_feedback(parsed_id)
+    if result["deleted_feedback"] == 0 and result["deleted_tickets"] == 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Feedback not found",
+        )
+    return result
+
+
 # =============================================================================
 # Ticket Endpoints
 # =============================================================================
@@ -299,6 +329,35 @@ async def get_ticket_detail(
             detail="Ticket not found",
         )
     return detail
+
+
+@router.delete("/tickets/{ticket_id}")
+async def delete_ticket(
+    ticket_id: str,
+    admin: AdminUser = Depends(require_admin),
+):
+    """Delete a ticket along with its comments and all linked feedback.
+
+    Removes the whole cluster so no feedback is left pointing at a missing
+    ticket. Returns 404 if the ticket does not exist.
+
+    Validates: Requirements 11.4
+    """
+    try:
+        parsed_id = uuid.UUID(ticket_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Ticket not found",
+        )
+
+    result = _feedback_store.delete_ticket_and_feedback(parsed_id)
+    if result["deleted_tickets"] == 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Ticket not found",
+        )
+    return result
 
 
 @router.patch("/tickets/{ticket_id}/advance", response_model=Ticket)
