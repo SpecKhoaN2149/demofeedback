@@ -144,6 +144,13 @@ async def health_check():
 # client-side routes (e.g. /admin/dashboard) resolve. In local dev the dist
 # folder is absent, so this block is skipped and Vite serves the frontend.
 # --------------------------------------------------------------------------- #
+# Headers that tell browsers/proxies never to cache a response.
+_NO_CACHE_HEADERS = {
+    "Cache-Control": "no-cache, no-store, must-revalidate",
+    "Pragma": "no-cache",
+    "Expires": "0",
+}
+
 _FRONTEND_DIST = _BACKEND_DIR.parent / "frontend" / "dist"
 if _FRONTEND_DIST.is_dir():
     from fastapi.staticfiles import StaticFiles
@@ -158,10 +165,26 @@ if _FRONTEND_DIST.is_dir():
         """Serve a static file when it exists, else the SPA entry point.
 
         Registered after the API routers, so /api/* and /health always win.
+
+        Caching strategy:
+          - Content-hashed build assets (their filename changes every build) may
+            be cached aggressively/forever.
+          - index.html and any other non-hashed file must NOT be cached, so a new
+            deploy is picked up immediately instead of serving a stale shell that
+            points at old JS.
         """
         candidate = _FRONTEND_DIST / full_path
         if full_path and candidate.is_file():
-            return FileResponse(str(candidate))
-        return FileResponse(str(_FRONTEND_DIST / "index.html"))
+            # /assets/* filenames are content-hashed → safe to cache long-term.
+            if full_path.startswith("assets/"):
+                return FileResponse(
+                    str(candidate),
+                    headers={"Cache-Control": "public, max-age=31536000, immutable"},
+                )
+            return FileResponse(str(candidate), headers=_NO_CACHE_HEADERS)
+        # SPA entry point — never cache so redeploys are seen right away.
+        return FileResponse(
+            str(_FRONTEND_DIST / "index.html"), headers=_NO_CACHE_HEADERS
+        )
 
     logger.info("Serving built frontend from %s", _FRONTEND_DIST)
