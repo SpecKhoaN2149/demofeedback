@@ -386,17 +386,20 @@ async def create_ticket_comment(
     body: CommentCreate,
     admin: AdminUser = Depends(require_admin),
 ):
-    """Create an internal comment on a ticket, authored by the current admin.
+    """Create a customer-facing comment on a ticket, attributed to the team.
 
-    The comment ``author`` is recorded from the authenticated admin's username.
-    Empty/whitespace-only text is rejected with 422 and an unknown ticket with
-    404.
+    Comments are surfaced to customers in their feedback status view, so the
+    ``author`` is recorded as the team brand ("Spectrum Support") rather than
+    the internal admin username. Empty/whitespace-only text is rejected with
+    422 and an unknown ticket with 404.
 
     Validates: Requirements 7.1, 7.2, 7.3, 7.4, 11.4
     """
     try:
+        # Comments are customer-facing, so they're attributed to the team brand
+        # ("Spectrum Support") rather than the internal admin username.
         return _ticket_comment_store.add(
-            ticket_id, author=admin.username, text=body.text
+            ticket_id, author=_SYSTEM_COMMENT_AUTHOR, text=body.text
         )
     except ValueError as e:
         raise HTTPException(
