@@ -1,8 +1,20 @@
 import { useState, useEffect, type FormEvent } from 'react'
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts'
 import { useAuth } from '../../context/AuthContext'
 import { runTrends, ApiError, type TrendRequest, type TrendReport } from '../../api/client'
 import AdminLayout from '../../components/layout/AdminLayout/AdminLayout'
 import Button from '../../components/ui/Button/Button'
+import { CHART, ChartTooltip, SENTIMENT_COLOR } from '../../components/charts/chartTheme'
 import styles from './admin.module.css'
 
 const DAY_MS = 86_400_000
@@ -13,6 +25,159 @@ function toLocalInput(d: Date): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(
     d.getHours()
   )}:${pad(d.getMinutes())}`
+}
+
+/** A KPI card showing baseline → current with a colored delta chip. */
+function TrendKpi({
+  label,
+  baseline,
+  current,
+  delta,
+  deltaSuffix = '',
+  higherIsWorse = true,
+}: {
+  label: string
+  baseline: string
+  current: string
+  delta: number
+  deltaSuffix?: string
+  /** When true, a positive delta is "bad" (red); when false, positive is "good". */
+  higherIsWorse?: boolean
+}) {
+  const up = delta > 0
+  const flat = delta === 0
+  const bad = higherIsWorse ? up : delta < 0
+  const cls = flat ? styles.deltaFlat : bad ? styles.deltaBad : styles.deltaGood
+  const arrow = flat ? '→' : up ? '▲' : '▼'
+  return (
+    <div className={styles.trendKpi}>
+      <div className={styles.trendKpiLabel}>{label}</div>
+      <div className={styles.trendKpiValue}>
+        <span className={styles.trendKpiBaseline}>{baseline}</span>
+        <span className={styles.trendKpiArrow}>→</span>
+        <span>{current}</span>
+      </div>
+      <div className={`${styles.trendKpiDelta} ${cls}`}>
+        {arrow} {flat ? 'no change' : `${up ? '+' : ''}${delta}${deltaSuffix}`}
+      </div>
+    </div>
+  )
+}
+
+/** Charts + KPI summary derived from a TrendReport. */
+function TrendVisuals({ report }: { report: TrendReport }) {
+  const base = report.baseline
+  const cur = report.current
+  const baseCount = base?.count ?? 0
+  const curCount = cur?.count ?? 0
+  const volDelta = curCount - baseCount
+  const volPct =
+    baseCount > 0 ? Math.round((volDelta / baseCount) * 100) : curCount > 0 ? 100 : 0
+
+  const baseSev = base?.average_severity ?? 0
+  const curSev = cur?.average_severity ?? 0
+  const sevDelta = Math.round((curSev - baseSev) * 100) / 100
+
+  const negBase = base?.sentiment_counts?.negative ?? 0
+  const negCur = cur?.sentiment_counts?.negative ?? 0
+  const negBasePct = baseCount ? Math.round((negBase / baseCount) * 100) : 0
+  const negCurPct = curCount ? Math.round((negCur / curCount) * 100) : 0
+
+  const themeData = report.theme_spikes.map((s) => ({
+    theme: s.theme,
+    baseline: s.baseline,
+    current: s.current,
+  }))
+  const sentimentData = report.sentiment_shifts.map((s) => ({
+    sentiment: s.sentiment,
+    baseline: Math.round(s.baseline_ratio * 1000) / 10,
+    current: Math.round(s.current_ratio * 1000) / 10,
+  }))
+
+  return (
+    <>
+      <div className={styles.trendKpis}>
+        <TrendKpi
+          label="Feedback volume"
+          baseline={String(baseCount)}
+          current={String(curCount)}
+          delta={volPct}
+          deltaSuffix="%"
+          higherIsWorse
+        />
+        <TrendKpi
+          label="Avg severity (1–10)"
+          baseline={baseSev ? baseSev.toFixed(1) : '—'}
+          current={curSev ? curSev.toFixed(1) : '—'}
+          delta={sevDelta}
+          higherIsWorse
+        />
+        <TrendKpi
+          label="Negative share"
+          baseline={`${negBasePct}%`}
+          current={`${negCurPct}%`}
+          delta={negCurPct - negBasePct}
+          deltaSuffix="pts"
+          higherIsWorse
+        />
+        <div className={styles.trendKpi}>
+          <div className={styles.trendKpiLabel}>Themes rising</div>
+          <div className={styles.trendKpiValue}>{report.theme_spikes.length}</div>
+          <div className={`${styles.trendKpiDelta} ${styles.deltaFlat}`}>
+            vs. baseline window
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.trendCharts}>
+        <div className={styles.trendChartCard}>
+          <h3 className={styles.trendChartTitle}>Theme volume: baseline vs current</h3>
+          {themeData.length === 0 ? (
+            <p className={styles.nlpEmpty}>No rising themes in this window.</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={Math.max(220, themeData.length * 44)}>
+              <BarChart data={themeData} layout="vertical" margin={{ top: 8, right: 16, bottom: 8, left: 8 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={CHART.grid} horizontal={false} />
+                <XAxis type="number" allowDecimals={false} tick={{ fontSize: 12, fill: CHART.axis }} axisLine={false} tickLine={false} />
+                <YAxis type="category" dataKey="theme" width={130} tick={{ fontSize: 12, fill: '#334155' }} axisLine={false} tickLine={false} />
+                <Tooltip cursor={{ fill: 'rgba(0,89,184,0.06)' }} content={<ChartTooltip />} />
+                <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
+                <Bar dataKey="baseline" name="Baseline" fill={CHART.neutral} radius={[0, 4, 4, 0]} barSize={11} />
+                <Bar dataKey="current" name="Current" fill={CHART.primary} radius={[0, 4, 4, 0]} barSize={11} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+
+        <div className={styles.trendChartCard}>
+          <h3 className={styles.trendChartTitle}>Sentiment mix (% of window)</h3>
+          {sentimentData.length === 0 ? (
+            <p className={styles.nlpEmpty}>No sentiment data in this window.</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={sentimentData} margin={{ top: 8, right: 8, bottom: 8, left: -16 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={CHART.grid} vertical={false} />
+                <XAxis dataKey="sentiment" tick={{ fontSize: 12, fill: CHART.axis }} axisLine={{ stroke: CHART.axisLine }} tickLine={false} />
+                <YAxis unit="%" tick={{ fontSize: 12, fill: CHART.axis }} axisLine={false} tickLine={false} />
+                <Tooltip cursor={{ fill: 'rgba(0,89,184,0.06)' }} content={<ChartTooltip valueSuffix="%" />} />
+                <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
+                <Bar dataKey="baseline" name="Baseline" radius={[4, 4, 0, 0]} barSize={22}>
+                  {sentimentData.map((d) => (
+                    <Cell key={`b-${d.sentiment}`} fill={SENTIMENT_COLOR[d.sentiment] ?? CHART.neutral} fillOpacity={0.4} />
+                  ))}
+                </Bar>
+                <Bar dataKey="current" name="Current" radius={[4, 4, 0, 0]} barSize={22}>
+                  {sentimentData.map((d) => (
+                    <Cell key={`c-${d.sentiment}`} fill={SENTIMENT_COLOR[d.sentiment] ?? CHART.primary} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+      </div>
+    </>
+  )
 }
 
 export default function TrendAnalysis() {
@@ -193,6 +358,8 @@ export default function TrendAnalysis() {
         {report && (
           <div className="trend-report" aria-live="polite">
             <h2>Trend Report</h2>
+
+            <TrendVisuals report={report} />
 
             <section aria-labelledby="theme-spikes-heading">
               <h3 id="theme-spikes-heading">Theme Spikes</h3>

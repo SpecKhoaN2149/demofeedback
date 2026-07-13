@@ -1,0 +1,27 @@
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--spectrum-space-3);
+  margin-top: var(--spectrum-space-4);
+}
+
+.summary {
+  font-size: var(--spectrum-font-size-sm);
+  color: var(--spectrum-color-text-secondary);
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: var(--spectrum-space-3);
+  margin-left: auto;
+}
+
+.pageIndicator {
+  font-size: var(--spectrum-font-size-sm);
+  font-weight: var(--spectrum-font-weight-medium);
+  color: var(--spectrum-color-text-primary);
+  white-space: nowrap;
+}

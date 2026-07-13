@@ -486,6 +486,25 @@
   box-shadow: 0 0 0 3px rgba(0, 89, 184, 0.18);
 }
 
+/* Inline checkbox filter (e.g. "Multiple feedback only"). */
+.filterToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spectrum-space-2);
+  font-size: var(--spectrum-font-size-sm);
+  color: var(--spectrum-color-text-primary);
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.filterToggle input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--spectrum-color-primary);
+  cursor: pointer;
+}
+
 /* Count of visible/total rows, right-aligned in the toolbar. */
 .resultCount {
   margin-left: auto;
@@ -632,4 +651,92 @@
 
 .linkedLink:hover {
   text-decoration: underline;
+}
+
+/* --------------------------------------------------------------------------
+   Trend Analysis visualizations
+   -------------------------------------------------------------------------- */
+.trendKpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--spectrum-space-4);
+  margin: var(--spectrum-space-4) 0 var(--spectrum-space-6);
+}
+
+.trendKpi {
+  padding: var(--spectrum-space-4);
+  border: 1px solid var(--spectrum-color-card-border);
+  border-radius: var(--spectrum-radius-lg);
+  background: var(--spectrum-color-white);
+  box-shadow: var(--spectrum-shadow-sm);
+}
+
+.trendKpiLabel {
+  font-size: var(--spectrum-font-size-xs);
+  font-weight: var(--spectrum-font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--spectrum-color-text-secondary);
+}
+
+.trendKpiValue {
+  display: flex;
+  align-items: baseline;
+  gap: var(--spectrum-space-2);
+  margin-top: var(--spectrum-space-2);
+  font-size: var(--spectrum-font-size-2xl);
+  font-weight: var(--spectrum-font-weight-bold);
+  color: var(--spectrum-color-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.trendKpiBaseline {
+  color: var(--spectrum-color-neutral-400);
+}
+
+.trendKpiArrow {
+  color: var(--spectrum-color-neutral-400);
+  font-size: var(--spectrum-font-size-lg);
+}
+
+.trendKpiDelta {
+  margin-top: var(--spectrum-space-1);
+  font-size: var(--spectrum-font-size-sm);
+  font-weight: var(--spectrum-font-weight-semibold);
+}
+
+.deltaBad {
+  color: var(--spectrum-color-error);
+}
+
+.deltaGood {
+  color: var(--spectrum-color-success);
+}
+
+.deltaFlat {
+  color: var(--spectrum-color-text-secondary);
+  font-weight: var(--spectrum-font-weight-medium);
+}
+
+.trendCharts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: var(--spectrum-space-5);
+  margin-bottom: var(--spectrum-space-8);
+}
+
+.trendChartCard {
+  padding: var(--spectrum-space-5);
+  border: 1px solid var(--spectrum-color-card-border);
+  border-radius: var(--spectrum-radius-lg);
+  background: var(--spectrum-color-white);
+  box-shadow: var(--spectrum-shadow-sm);
+  min-width: 0;
+}
+
+.trendChartTitle {
+  font-size: var(--spectrum-font-size-base);
+  font-weight: var(--spectrum-font-weight-semibold);
+  color: var(--spectrum-color-text-primary);
+  margin: 0 0 var(--spectrum-space-4);
 }

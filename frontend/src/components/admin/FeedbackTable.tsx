@@ -6,7 +6,9 @@ import Badge from '../ui/Badge/Badge'
 import SourceBadge from '../nlp/SourceBadge'
 import SeverityBadge from '../nlp/SeverityBadge'
 import SortHeader from '../ui/SortHeader'
+import Pagination from '../ui/Pagination'
 import { useSort, type SortGetter } from '../../hooks/useSort'
+import { usePagination } from '../../hooks/usePagination'
 import styles from '../../pages/admin/admin.module.css'
 
 const PREVIEW_LENGTH = 120
@@ -111,6 +113,13 @@ export default function FeedbackTable() {
     'desc'
   )
 
+  const { page, setPage, totalPages, pageItems, total, from, to } = usePagination(sorted, 20)
+
+  // Reset to page 1 when the filtered/sorted set changes.
+  useEffect(() => {
+    setPage(1)
+  }, [search, sentimentFilter, departmentFilter, sortKey, sortDir, setPage])
+
   const filtersActive =
     search.trim() !== '' ||
     sentimentFilter !== 'all' ||
@@ -201,7 +210,7 @@ export default function FeedbackTable() {
                 <td colSpan={9} className={styles.nlpEmpty}>No feedback matches your search.</td>
               </tr>
             )}
-            {sorted.map((r) => (
+            {pageItems.map((r) => (
               <tr
                 key={r.feedback_id}
                 className={styles.clickableRow}
@@ -247,6 +256,15 @@ export default function FeedbackTable() {
           </tbody>
         </table>
       </div>
+
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        onChange={setPage}
+        total={total}
+        from={from}
+        to={to}
+      />
     </>
   )
 }

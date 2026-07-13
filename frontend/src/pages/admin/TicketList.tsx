@@ -5,7 +5,9 @@ import { getTickets, advanceTicket, ApiError, type TicketWithCount } from '../..
 import AdminLayout from '../../components/layout/AdminLayout/AdminLayout'
 import Button from '../../components/ui/Button/Button'
 import SortHeader from '../../components/ui/SortHeader'
+import Pagination from '../../components/ui/Pagination'
 import { useSort, type SortGetter } from '../../hooks/useSort'
+import { usePagination } from '../../hooks/usePagination'
 import styles from './admin.module.css'
 
 const STATUS_PILL: Record<TicketWithCount['status'], string> = {
@@ -39,6 +41,7 @@ export default function TicketList() {
       ? (searchParams.get('status') as string)
       : 'all'
   )
+  const [multiOnly, setMultiOnly] = useState(searchParams.get('multi') === '1')
   const paramSort = searchParams.get('sort')
   const initialSortKey =
     paramSort && TICKET_SORT[paramSort] ? paramSort : 'created_at'
@@ -103,13 +106,14 @@ export default function TicketList() {
     const q = search.trim().toLowerCase()
     return tickets.filter((t) => {
       if (statusFilter !== 'all' && t.status !== statusFilter) return false
+      if (multiOnly && t.linked_feedback_count <= 1) return false
       if (!q) return true
       return [t.ticket_id, t.issue_category, t.priority, t.status]
         .join(' ')
         .toLowerCase()
         .includes(q)
     })
-  }, [tickets, search, statusFilter])
+  }, [tickets, search, statusFilter, multiOnly])
 
   const { sorted, sortKey, sortDir, toggleSort, setSort } = useSort(
     filtered,
@@ -118,29 +122,39 @@ export default function TicketList() {
     initialSortDir
   )
 
+  const { page, setPage, totalPages, pageItems, total, from, to } = usePagination(sorted, 20)
+
+  // Reset to the first page whenever the filtered/sorted set changes.
+  useEffect(() => {
+    setPage(1)
+  }, [search, statusFilter, multiOnly, sortKey, sortDir, setPage])
+
   const filtersActive =
     search.trim() !== '' ||
     statusFilter !== 'all' ||
+    multiOnly ||
     sortKey !== 'created_at' ||
     sortDir !== 'asc'
 
   function clearFilters() {
     setSearch('')
     setStatusFilter('all')
+    setMultiOnly(false)
     setSort('created_at', 'asc')
   }
 
-  // Persist search/status/sort to the URL (replace) for shareable views.
+  // Persist search/status/multi/sort to the URL (replace) for shareable views.
   useEffect(() => {
     const p: Record<string, string> = {}
     if (search.trim()) p.q = search.trim()
     if (statusFilter !== 'all') p.status = statusFilter
+    if (multiOnly) p.multi = '1'
     if (sortKey) {
       p.sort = sortKey
       p.dir = sortDir
     }
     setSearchParams(p, { replace: true })
-  }, [search, statusFilter, sortKey, sortDir, setSearchParams])
+  }, [search, statusFilter, multiOnly, sortKey, sortDir, setSearchParams])
 
   if (loading) {
     return (
@@ -204,6 +218,14 @@ export default function TicketList() {
                 <option value="in_progress">In progress</option>
                 <option value="resolved">Resolved</option>
               </select>
+              <label className={styles.filterToggle}>
+                <input
+                  type="checkbox"
+                  checked={multiOnly}
+                  onChange={(e) => setMultiOnly(e.target.checked)}
+                />
+                Multiple feedback only
+              </label>
               {filtersActive && (
                 <button type="button" className={styles.clearBtn} onClick={clearFilters}>
                   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -238,7 +260,7 @@ export default function TicketList() {
                       </td>
                     </tr>
                   )}
-                  {sorted.map((ticket) => {
+                  {pageItems.map((ticket) => {
                     const nextStatus = getNextStatus(ticket.status)
                     return (
                       <tr
@@ -285,6 +307,15 @@ export default function TicketList() {
                 </tbody>
               </table>
             </div>
+
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              onChange={setPage}
+              total={total}
+              from={from}
+              to={to}
+            />
           </>
         )}
       </div>
