@@ -144,7 +144,9 @@ export default function TicketDetail() {
     setAdvanceError(null)
     try {
       await advanceTicket(token, String(ticket.ticket_id))
-      await loadTicket()
+      // Reload both the ticket (new status) and comments (the auto status-update
+      // comment the backend just posted) so the thread updates live.
+      await Promise.all([loadTicket(), loadComments()])
     } catch (err) {
       if (err instanceof ApiError) {
         setAdvanceError(
