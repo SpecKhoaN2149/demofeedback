@@ -257,6 +257,77 @@ def _build_records() -> tuple[list[dict], list[dict], list[dict]]:
             triage="action_required", ticket_id=orl_ticket, days_ago=random.uniform(0.5, 3),
         )
 
+    # ── Cluster D: Denver storm outage — 6 reports → ONE ticket ──────────────
+    den_ticket = add_ticket(
+        "denver-outage", "outage",
+        "Storm-related outage affecting the Denver metro; multiple reports of total loss of service.",
+        "in_progress", days_ago=1,
+    )
+    den_texts = [
+        ("Power flickered and now internet is totally out in Denver. Storm damage?", "x"),
+        ("No service across my Denver block since the storm rolled through.", "reddit"),
+        ("Denver 80202 — completely down for hours after the storm.", None),
+        ("Cable and internet both dead in Denver after last night's weather.", "facebook"),
+        ("Storm knocked out our Denver connection, still no ETA.", None),
+        ("Third outage this winter in Denver, down again since this morning.", "x"),
+    ]
+    for t, plat in den_texts:
+        add(
+            text=t, theme="outage", sentiment="negative", sev10=random.choice([8, 9, 10]),
+            reasoning="Weather-driven outage impacting many customers in one metro; sustained downtime; high household/business impact.",
+            metro="denver",
+            source_type="social" if plat else "direct",
+            platform=plat, channel=None if plat else "web_form",
+            triage="action_required", ticket_id=den_ticket, days_ago=random.uniform(0.5, 1.5),
+        )
+    comments.append({"ticket_id": den_ticket, "author": "admin",
+                     "text": "Confirmed storm damage to a Denver node; crews on site. Restoring in phases.",
+                     "created_at": (now - timedelta(hours=4)).isoformat()})
+
+    # ── Cluster E: NYC installation backlog — 4 reports → ONE ticket ─────────
+    nyc_ticket = add_ticket(
+        "nyc-install", "installation",
+        "Installation appointment backlog in the New York area; multiple missed/late appointments.",
+        "open", days_ago=4,
+    )
+    nyc_texts = [
+        ("Third rescheduled install in NYC. No one shows up.", None),
+        ("Waited all day in Manhattan, installer never arrived.", "x"),
+        ("NYC install pushed out two more weeks with no explanation.", "reddit"),
+        ("Booked an install in New York, got cancelled by text last minute.", "facebook"),
+    ]
+    for t, plat in nyc_texts:
+        add(
+            text=t, theme="installation", sentiment="negative", sev10=random.choice([6, 7]),
+            reasoning="Repeated installation failures for several customers in one metro; scheduling/operations issue requiring coordination.",
+            metro="nyc",
+            source_type="social" if plat else "direct",
+            platform=plat, channel=None if plat else "web_form",
+            triage="action_required", ticket_id=nyc_ticket, days_ago=random.uniform(1, 5),
+        )
+
+    # ── Cluster F: San Antonio price-hike complaints — 4 reports → ONE ticket ─
+    sa_ticket = add_ticket(
+        "sanantonio-pricing", "pricing",
+        "Cluster of price-increase complaints from the San Antonio area after a regional promo ended.",
+        "open", days_ago=5,
+    )
+    sa_texts = [
+        ("Everyone in my San Antonio building got a price hike at once.", "reddit"),
+        ("Promo ended and my San Antonio bill went up $35. Not okay.", None),
+        ("San Antonio neighbors all complaining about the same rate increase.", "x"),
+        ("Loyalty means nothing — San Antonio prices up again with no notice.", None),
+    ]
+    for t, plat in sa_texts:
+        add(
+            text=t, theme="pricing", sentiment="negative", sev10=random.choice([5, 6]),
+            reasoning="Correlated pricing complaints across one metro; retention risk; not a service-availability emergency.",
+            metro="sanantonio",
+            source_type="social" if plat else "direct",
+            platform=plat, channel=None if plat else "web_form",
+            triage="action_required", ticket_id=sa_ticket, days_ago=random.uniform(1, 6),
+        )
+
     # ── Positive praise (no_action) — scattered, various metros ──────────────
     praise = [
         ("The technician who set up my service was fantastic and super friendly!", "charlotte", "facebook"),
@@ -267,6 +338,9 @@ def _build_records() -> tuple[list[dict], list[dict], list[dict]]:
         ("Customer service actually called me back. Impressed.", "tampa", None),
         ("Switched from a competitor and the difference is night and day. Great job.", "sanantonio", "facebook"),
         ("Tech went above and beyond to hide the cabling. Very happy.", "stlouis", None),
+        ("Billing question got resolved on the first call, thank you.", "cincinnati", None),
+        ("Rock-solid uptime this month, zero complaints.", "tampa", "x"),
+        ("The retention offer they gave me was actually fair. Staying.", "la", None),
     ]
     for t, metro, plat in praise:
         add(
@@ -287,6 +361,9 @@ def _build_records() -> tuple[list[dict], list[dict], list[dict]]:
         ("Setup instructions were clear, no complaints.", "sanantonio", None),
         ("Would love a loyalty discount for long-time customers.", "charlotte", "reddit"),
         ("Appointment window of 4 hours is a little long, but it worked out.", "orlando", None),
+        ("Any plans to expand gigabit service to my area?", "raleigh", None),
+        ("Portal works fine, though I wish it kept me logged in longer.", "charlotte", "reddit"),
+        ("Moved recently and the service transfer was smooth enough.", "orlando", None),
     ]
     for t, metro, plat in neutral:
         add(
@@ -398,14 +475,25 @@ def seed() -> None:
         conn.commit()
 
     print(f"Seeded {len(feedback)} mock feedback, {len(tickets)} tickets, {len(comments)} comments.")
-    print("Clusters: Austin outage (8→1 ticket), LA billing (5→1), Orlando speeds (4→1).")
+    print(
+        "Multi-feedback clusters: Austin outage (8→1 ticket), LA billing (5→1), "
+        "Orlando speeds (4→1), Denver outage (6→1), NYC installs (4→1), "
+        "San Antonio pricing (4→1)."
+    )
 
 
 def clear() -> None:
     init_db()
-    feedback_ids = [_mid(f"feedback-{i}") for i in range(200)]  # generous upper bound
-    ticket_ids = [_mid(f"ticket-austin-outage"), _mid("ticket-la-billing"), _mid("ticket-orlando-speed")]
-    ticket_ids += [_mid(f"ticket-single-{i}") for i in range(200)]
+    feedback_ids = [_mid(f"feedback-{i}") for i in range(300)]  # generous upper bound
+    ticket_ids = [
+        _mid("ticket-austin-outage"),
+        _mid("ticket-la-billing"),
+        _mid("ticket-orlando-speed"),
+        _mid("ticket-denver-outage"),
+        _mid("ticket-nyc-install"),
+        _mid("ticket-sanantonio-pricing"),
+    ]
+    ticket_ids += [_mid(f"ticket-single-{i}") for i in range(300)]
 
     with get_connection() as conn:
         fph = ",".join("?" for _ in feedback_ids)
