@@ -17,6 +17,7 @@ const PREVIEW_LENGTH = 140
 // Module-level so the sort memo stays stable across renders.
 const REVIEW_SORT: Record<string, SortGetter<FeedbackRow>> = {
   feedback_id: (r) => r.feedback_id,
+  source: (r) => r.platform ?? r.channel ?? r.source_type,
   sentiment: (r) => r.sentiment,
   severity: (r) => r.severity,
   department: (r) => r.department,
@@ -232,7 +233,7 @@ export default function ReviewQueue() {
                 <thead>
                   <tr>
                     <SortHeader label="Feedback ID" colKey="feedback_id" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
-                    <th>Source</th>
+                    <SortHeader label="Source" colKey="source" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
                     <SortHeader label="Sentiment" colKey="sentiment" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
                     <SortHeader label="Severity" colKey="severity" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
                     <SortHeader label="Department" colKey="department" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
@@ -289,6 +290,7 @@ export default function ReviewQueue() {
                             <Button
                               variant="primary"
                               size="small"
+                              className={styles.equalActionBtn}
                               onClick={() =>
                                 handleTriage(item.feedback_id, 'action_required')
                               }
@@ -300,6 +302,7 @@ export default function ReviewQueue() {
                             <Button
                               variant="outline"
                               size="small"
+                              className={styles.equalActionBtn}
                               onClick={() =>
                                 handleTriage(item.feedback_id, 'no_action')
                               }

@@ -341,6 +341,9 @@ def _build_records() -> tuple[list[dict], list[dict], list[dict]]:
         ("Billing question got resolved on the first call, thank you.", "cincinnati", None),
         ("Rock-solid uptime this month, zero complaints.", "tampa", "x"),
         ("The retention offer they gave me was actually fair. Staying.", "la", None),
+        ("Huge thanks to Marcus, the technician in Denver — he went above and beyond!", "denver", "x"),
+        ("Shoutout to Priya in support, she resolved my issue in minutes.", "nyc", "reddit"),
+        ("Our installer James was fantastic and super professional. Give that man a raise!", "charlotte", None),
     ]
     for t, metro, plat in praise:
         add(

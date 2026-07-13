@@ -12,6 +12,7 @@ import Button from '../../components/ui/Button/Button'
 import SortHeader from '../../components/ui/SortHeader'
 import { useSort, type SortGetter } from '../../hooks/useSort'
 import { sourceDisplay } from '../../utils/sourceDisplay'
+import { extractMentionedNames } from '../../utils/mentionedNames'
 import styles from './admin.module.css'
 
 const PAGE_SIZE = 10
@@ -36,6 +37,7 @@ export default function MarketingLog() {
   const [offset, setOffset] = useState(0)
   const [searchParams, setSearchParams] = useSearchParams()
   const [search, setSearch] = useState(searchParams.get('q') ?? '')
+  const [kudosOnly, setKudosOnly] = useState(searchParams.get('kudos') === '1')
   const paramSort = searchParams.get('sort')
   const initialSortKey =
     paramSort && MARKETING_SORT[paramSort] ? paramSort : 'created_at'
@@ -70,11 +72,12 @@ export default function MarketingLog() {
   const filteredItems = useMemo(() => {
     if (!data) return []
     const q = search.trim().toLowerCase()
-    if (!q) return data.items
-    return data.items.filter((e) =>
-      [e.text, e.source_type, e.platform ?? ''].join(' ').toLowerCase().includes(q)
-    )
-  }, [data, search])
+    return data.items.filter((e) => {
+      if (kudosOnly && extractMentionedNames(e.text).length === 0) return false
+      if (!q) return true
+      return [e.text, e.source_type, e.platform ?? ''].join(' ').toLowerCase().includes(q)
+    })
+  }, [data, search, kudosOnly])
 
   const { sorted, sortKey, sortDir, toggleSort, setSort } = useSort(
     filteredItems,
@@ -84,23 +87,25 @@ export default function MarketingLog() {
   )
 
   const filtersActive =
-    search.trim() !== '' || sortKey !== 'created_at' || sortDir !== 'desc'
+    search.trim() !== '' || kudosOnly || sortKey !== 'created_at' || sortDir !== 'desc'
 
   function clearFilters() {
     setSearch('')
+    setKudosOnly(false)
     setSort('created_at', 'desc')
   }
 
-  // Persist search/sort to the URL (replace) for shareable views.
+  // Persist search/kudos/sort to the URL (replace) for shareable views.
   useEffect(() => {
     const p: Record<string, string> = {}
     if (search.trim()) p.q = search.trim()
+    if (kudosOnly) p.kudos = '1'
     if (sortKey) {
       p.sort = sortKey
       p.dir = sortDir
     }
     setSearchParams(p, { replace: true })
-  }, [search, sortKey, sortDir, setSearchParams])
+  }, [search, kudosOnly, sortKey, sortDir, setSearchParams])
 
   function goToPage(page: number) {
     setOffset((page - 1) * PAGE_SIZE)
@@ -162,6 +167,14 @@ export default function MarketingLog() {
               aria-label="Search marketing log"
             />
           </div>
+          <label className={styles.filterToggle}>
+            <input
+              type="checkbox"
+              checked={kudosOnly}
+              onChange={(e) => setKudosOnly(e.target.checked)}
+            />
+            👏 Mentions a person
+          </label>
           {filtersActive && (
             <button type="button" className={styles.clearBtn} onClick={clearFilters}>
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -180,6 +193,7 @@ export default function MarketingLog() {
             <thead>
               <tr>
                 <SortHeader label="Feedback" colKey="text" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+                <th>Kudos</th>
                 <SortHeader label="Source" colKey="source" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
                 <SortHeader label="Timestamp" colKey="created_at" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
                 <th>Original</th>
@@ -188,13 +202,14 @@ export default function MarketingLog() {
             <tbody>
               {sorted.length === 0 && (
                 <tr>
-                  <td colSpan={4} className={styles.nlpEmpty}>
+                  <td colSpan={5} className={styles.nlpEmpty}>
                     No feedback matches your search.
                   </td>
                 </tr>
               )}
               {sorted.map((entry) => {
                 const src = sourceDisplay(entry)
+                const names = extractMentionedNames(entry.text)
                 return (
                   <tr
                     key={entry.feedback_id}
@@ -202,6 +217,17 @@ export default function MarketingLog() {
                     onClick={() => navigate(`/admin/feedback/${entry.feedback_id}`)}
                   >
                     <td className={styles.commentCell}>{entry.text}</td>
+                    <td>
+                      {names.length > 0 ? (
+                        <span className={styles.kudosCell}>
+                          {names.map((n) => (
+                            <span key={n} className={styles.kudosChip}>👏 {n}</span>
+                          ))}
+                        </span>
+                      ) : (
+                        <span className={styles.nlpEmpty}>—</span>
+                      )}
+                    </td>
                     <td>
                       {src.label}
                       {src.detail ? ` · ${src.detail}` : ''}

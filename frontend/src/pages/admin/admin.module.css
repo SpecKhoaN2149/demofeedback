@@ -599,6 +599,37 @@
   color: var(--spectrum-color-success-text);
 }
 
+/* Equal-width action buttons so stacked/adjacent actions line up. */
+.equalActionBtn {
+  min-width: 118px;
+  justify-content: center;
+}
+
+.advanceBtn {
+  min-width: 150px;
+  justify-content: center;
+}
+
+/* Kudos name chips in the marketing log. */
+.kudosCell {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spectrum-space-1);
+}
+
+.kudosChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: var(--spectrum-radius-full);
+  background-color: var(--spectrum-color-success-light);
+  color: var(--spectrum-color-success-text);
+  font-size: var(--spectrum-font-size-xs);
+  font-weight: var(--spectrum-font-weight-semibold);
+  white-space: nowrap;
+}
+
 /* Destructive action button (delete). */
 .dangerBtn {
   color: var(--spectrum-color-error) !important;

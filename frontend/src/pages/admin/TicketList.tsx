@@ -290,6 +290,7 @@ export default function TicketList() {
                           <Button
                             variant="outline"
                             size="small"
+                            className={styles.advanceBtn}
                             onClick={() => handleAdvance(ticket.ticket_id)}
                             disabled={advancingId === ticket.ticket_id || !nextStatus}
                             aria-label={`Advance ticket ${ticket.ticket_id} to ${nextStatus}`}
