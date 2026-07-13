@@ -11,7 +11,7 @@ import SortHeader from '../../components/ui/SortHeader'
 import { useSort, type SortGetter } from '../../hooks/useSort'
 import styles from './admin.module.css'
 
-const PAGE_SIZE = 20
+const PAGE_SIZE = 10
 const PREVIEW_LENGTH = 140
 
 // Module-level so the sort memo stays stable across renders.

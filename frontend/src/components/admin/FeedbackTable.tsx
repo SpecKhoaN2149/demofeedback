@@ -113,7 +113,7 @@ export default function FeedbackTable() {
     'desc'
   )
 
-  const { page, setPage, totalPages, pageItems, total, from, to } = usePagination(sorted, 20)
+  const { page, setPage, totalPages, pageItems, total, from, to } = usePagination(sorted, 10)
 
   // Reset to page 1 when the filtered/sorted set changes.
   useEffect(() => {

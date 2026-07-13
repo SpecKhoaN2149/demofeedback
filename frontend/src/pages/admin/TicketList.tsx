@@ -122,7 +122,7 @@ export default function TicketList() {
     initialSortDir
   )
 
-  const { page, setPage, totalPages, pageItems, total, from, to } = usePagination(sorted, 20)
+  const { page, setPage, totalPages, pageItems, total, from, to } = usePagination(sorted, 10)
 
   // Reset to the first page whenever the filtered/sorted set changes.
   useEffect(() => {

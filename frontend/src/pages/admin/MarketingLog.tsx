@@ -14,7 +14,7 @@ import { useSort, type SortGetter } from '../../hooks/useSort'
 import { sourceDisplay } from '../../utils/sourceDisplay'
 import styles from './admin.module.css'
 
-const PAGE_SIZE = 20
+const PAGE_SIZE = 10
 
 // Module-level so the sort memo stays stable across renders.
 const MARKETING_SORT: Record<string, SortGetter<MarketingEntry>> = {

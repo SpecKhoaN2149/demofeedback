@@ -27,6 +27,13 @@ function toLocalInput(d: Date): string {
   )}:${pad(d.getMinutes())}`
 }
 
+/** Short human date from a datetime-local string (e.g. "Jul 8"). */
+function fmtDate(s: string): string {
+  const d = new Date(s)
+  if (Number.isNaN(d.getTime())) return s
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+}
+
 /** A KPI card showing baseline → current with a colored delta chip. */
 function TrendKpi({
   label,
@@ -189,6 +196,9 @@ export default function TrendAnalysis() {
   const [report, setReport] = useState<TrendReport | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Once analysis runs, collapse the (tall) date form into a compact bar so the
+  // results get the space. The user can expand it again to change windows.
+  const [formCollapsed, setFormCollapsed] = useState(false)
 
   /**
    * Fill both windows from a preset: the current window is the last `days`
@@ -251,6 +261,7 @@ export default function TrendAnalysis() {
     try {
       const result = await runTrends(token, body)
       setReport(result)
+      setFormCollapsed(true)
     } catch (err) {
       if (err instanceof ApiError) {
         if (err.status === 422) {
@@ -272,24 +283,49 @@ export default function TrendAnalysis() {
       <div className={`trend-analysis ${styles.page}`}>
         <h1>Trend Analysis</h1>
 
-        <p className={styles.subtitle}>
-          Compare a current period against the period right before it. Use a
-          quick preset or fine-tune the dates below.
-        </p>
+        {report && formCollapsed ? (
+          /* Compact summary bar shown while results are on screen. */
+          <div className={styles.trendWindowBar}>
+            <div className={styles.trendWindowChips}>
+              <span className={styles.trendWindowChip}>
+                <span className={styles.trendWindowLabel}>Baseline</span>
+                {fmtDate(baselineStart)} – {fmtDate(baselineEnd)}
+              </span>
+              <span className={styles.trendWindowVs}>vs</span>
+              <span className={`${styles.trendWindowChip} ${styles.trendWindowChipCurrent}`}>
+                <span className={styles.trendWindowLabel}>Current</span>
+                {fmtDate(currentStart)} – {fmtDate(currentEnd)}
+              </span>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="small"
+              onClick={() => setFormCollapsed(false)}
+            >
+              Change windows
+            </Button>
+          </div>
+        ) : (
+          <>
+            <p className={styles.subtitle}>
+              Compare a current period against the period right before it. Use a
+              quick preset or fine-tune the dates below.
+            </p>
 
-        <div className={styles.presetRow}>
-          <Button type="button" variant="outline" size="small" onClick={() => applyPreset(7)}>
-            Last 7 days
-          </Button>
-          <Button type="button" variant="outline" size="small" onClick={() => applyPreset(30)}>
-            Last 30 days
-          </Button>
-          <Button type="button" variant="outline" size="small" onClick={() => applyPreset(90)}>
-            Last 90 days
-          </Button>
-        </div>
+            <div className={styles.presetRow}>
+              <Button type="button" variant="outline" size="small" onClick={() => applyPreset(7)}>
+                Last 7 days
+              </Button>
+              <Button type="button" variant="outline" size="small" onClick={() => applyPreset(30)}>
+                Last 30 days
+              </Button>
+              <Button type="button" variant="outline" size="small" onClick={() => applyPreset(90)}>
+                Last 90 days
+              </Button>
+            </div>
 
-        <form onSubmit={handleSubmit} aria-label="Trend analysis form" className={styles.form}>
+            <form onSubmit={handleSubmit} aria-label="Trend analysis form" className={styles.form}>
           {error && (
             <div className={styles.error} role="alert">{error}</div>
           )}
@@ -350,10 +386,12 @@ export default function TrendAnalysis() {
             </div>
           </fieldset>
 
-          <Button type="submit" variant="primary" disabled={loading}>
-            {loading ? 'Analyzing…' : 'Run Analysis'}
-          </Button>
-        </form>
+              <Button type="submit" variant="primary" disabled={loading}>
+                {loading ? 'Analyzing…' : 'Run Analysis'}
+              </Button>
+            </form>
+          </>
+        )}
 
         {report && (
           <div className="trend-report" aria-live="polite">
