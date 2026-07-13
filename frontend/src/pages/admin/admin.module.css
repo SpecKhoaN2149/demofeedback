@@ -741,6 +741,67 @@
   margin: 0 0 var(--spectrum-space-4);
 }
 
+/* At-a-glance headline insight banner. */
+.trendHeadline {
+  display: flex;
+  align-items: center;
+  gap: var(--spectrum-space-3);
+  padding: var(--spectrum-space-4) var(--spectrum-space-5);
+  border-radius: var(--spectrum-radius-lg);
+  border: 1px solid var(--spectrum-color-card-border);
+  font-size: var(--spectrum-font-size-lg);
+  font-weight: var(--spectrum-font-weight-semibold);
+  color: var(--spectrum-color-text-primary);
+  margin: var(--spectrum-space-4) 0 var(--spectrum-space-4);
+}
+
+.trendHeadlineIcon {
+  font-size: 1.4rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.headlineBad {
+  background: var(--spectrum-color-error-light);
+  border-color: rgba(211, 47, 47, 0.35);
+}
+
+.headlineGood {
+  background: var(--spectrum-color-success-light);
+  border-color: rgba(46, 125, 50, 0.35);
+}
+
+.headlineNeutral {
+  background: var(--spectrum-color-info-light);
+  border-color: rgba(0, 89, 184, 0.25);
+}
+
+/* Daily volume sparkline card. */
+.trendSparkCard {
+  padding: var(--spectrum-space-4) var(--spectrum-space-5);
+  border: 1px solid var(--spectrum-color-card-border);
+  border-radius: var(--spectrum-radius-lg);
+  background: var(--spectrum-color-white);
+  box-shadow: var(--spectrum-shadow-sm);
+  margin-bottom: var(--spectrum-space-6);
+}
+
+.trendSparkHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--spectrum-space-3);
+  margin-bottom: var(--spectrum-space-2);
+}
+
+.trendSparkTotal {
+  font-size: var(--spectrum-font-size-xs);
+  font-weight: var(--spectrum-font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--spectrum-color-text-secondary);
+}
+
 /* Compact window summary bar (shown after analysis runs). */
 .trendWindowBar {
   display: flex;

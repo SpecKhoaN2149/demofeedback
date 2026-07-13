@@ -247,7 +247,16 @@ export interface TrendWindowAgg {
   count: number
   theme_counts: Record<string, number>
   sentiment_counts: Record<string, number>
+  department_counts: Record<string, number>
   average_severity: number
+}
+
+/** One day of volume across the compared windows (for the sparkline). */
+export interface TrendDailyPoint {
+  date: string
+  baseline: number
+  current: number
+  total: number
 }
 
 export interface TrendReport {
@@ -266,6 +275,7 @@ export interface TrendReport {
     current_severity: number
     delta: number
   }>
+  daily?: TrendDailyPoint[]
 }
 
 export interface LogoutResponse {

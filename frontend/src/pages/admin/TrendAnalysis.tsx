@@ -1,10 +1,13 @@
 import { useState, useEffect, type FormEvent } from 'react'
 import {
+  Area,
+  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
   Cell,
   Legend,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -32,6 +35,64 @@ function fmtDate(s: string): string {
   const d = new Date(s)
   if (Number.isNaN(d.getTime())) return s
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+}
+
+/** Prettify a short date for the sparkline axis/tooltip. */
+function shortDay(iso: string): string {
+  const parts = iso.split('-')
+  if (parts.length !== 3) return iso
+  return `${Number(parts[1])}/${Number(parts[2])}`
+}
+
+/**
+ * Derive a single at-a-glance headline from the report, picking the most
+ * notable shift. Returns the sentence plus a tone for coloring.
+ */
+function buildHeadline(report: TrendReport): { text: string; tone: 'bad' | 'good' | 'neutral' } {
+  const base = report.baseline
+  const cur = report.current
+  const baseCount = base?.count ?? 0
+  const curCount = cur?.count ?? 0
+
+  // Biggest theme jump.
+  let topTheme: { theme: string; baseline: number; current: number; jump: number } | null = null
+  for (const s of report.theme_spikes) {
+    const jump = s.current - s.baseline
+    if (!topTheme || jump > topTheme.jump) topTheme = { ...s, jump }
+  }
+
+  // Negative sentiment share shift (in percentage points).
+  const negBase = base?.sentiment_counts?.negative ?? 0
+  const negCur = cur?.sentiment_counts?.negative ?? 0
+  const negBasePct = baseCount ? (negBase / baseCount) * 100 : 0
+  const negCurPct = curCount ? (negCur / curCount) * 100 : 0
+  const negDelta = Math.round(negCurPct - negBasePct)
+
+  // Volume % change.
+  const volPct = baseCount ? Math.round(((curCount - baseCount) / baseCount) * 100) : curCount ? 100 : 0
+
+  if (topTheme && topTheme.jump >= 2 && topTheme.current >= topTheme.baseline * 1.5) {
+    const pct = topTheme.baseline
+      ? Math.round(((topTheme.current - topTheme.baseline) / topTheme.baseline) * 100)
+      : 100
+    return {
+      text: `“${topTheme.theme}” reports jumped ${pct}% (${topTheme.baseline} → ${topTheme.current}) vs the previous period.`,
+      tone: 'bad',
+    }
+  }
+  if (Math.abs(negDelta) >= 5) {
+    return {
+      text: `Negative sentiment ${negDelta > 0 ? 'up' : 'down'} ${Math.abs(negDelta)} pts vs the previous period (${Math.round(negBasePct)}% → ${Math.round(negCurPct)}%).`,
+      tone: negDelta > 0 ? 'bad' : 'good',
+    }
+  }
+  if (Math.abs(volPct) >= 10) {
+    return {
+      text: `Feedback volume ${volPct > 0 ? 'up' : 'down'} ${Math.abs(volPct)}% vs the previous period (${baseCount} → ${curCount}).`,
+      tone: volPct > 0 ? 'bad' : 'good',
+    }
+  }
+  return { text: 'No major shifts vs the previous period — things look steady.', tone: 'neutral' }
 }
 
 /** A KPI card showing baseline → current with a colored delta chip. */
@@ -81,9 +142,11 @@ function TrendVisuals({ report }: { report: TrendReport }) {
   const volPct =
     baseCount > 0 ? Math.round((volDelta / baseCount) * 100) : curCount > 0 ? 100 : 0
 
-  const baseSev = base?.average_severity ?? 0
-  const curSev = cur?.average_severity ?? 0
-  const sevDelta = Math.round((curSev - baseSev) * 100) / 100
+  // Window average severity is on the NLP 1-5 scale; show it on the 1-10 scale
+  // used everywhere else in the app.
+  const baseSev = (base?.average_severity ?? 0) * 2
+  const curSev = (cur?.average_severity ?? 0) * 2
+  const sevDelta = Math.round((curSev - baseSev) * 10) / 10
 
   const negBase = base?.sentiment_counts?.negative ?? 0
   const negCur = cur?.sentiment_counts?.negative ?? 0
@@ -101,8 +164,72 @@ function TrendVisuals({ report }: { report: TrendReport }) {
     current: Math.round(s.current_ratio * 1000) / 10,
   }))
 
+  // Per-department breakdown: merge baseline + current department counts.
+  const deptKeys = Array.from(
+    new Set([
+      ...Object.keys(base?.department_counts ?? {}),
+      ...Object.keys(cur?.department_counts ?? {}),
+    ])
+  )
+  const deptData = deptKeys
+    .map((d) => ({
+      department: d,
+      baseline: base?.department_counts?.[d] ?? 0,
+      current: cur?.department_counts?.[d] ?? 0,
+    }))
+    .sort((a, b) => b.current - a.current)
+
+  // Daily volume series for the sparkline; mark where current window begins.
+  const daily = (report.daily ?? []).map((d) => ({ ...d, label: shortDay(d.date) }))
+  const boundaryLabel = daily.find((d) => d.current > 0)?.label
+
+  const headline = buildHeadline(report)
+
   return (
     <>
+      <div
+        className={`${styles.trendHeadline} ${
+          headline.tone === 'bad'
+            ? styles.headlineBad
+            : headline.tone === 'good'
+              ? styles.headlineGood
+              : styles.headlineNeutral
+        }`}
+        role="status"
+      >
+        <span className={styles.trendHeadlineIcon} aria-hidden="true">
+          {headline.tone === 'bad' ? '⚠️' : headline.tone === 'good' ? '✅' : 'ℹ️'}
+        </span>
+        {headline.text}
+      </div>
+
+      {daily.length > 0 && (
+        <div className={styles.trendSparkCard}>
+          <div className={styles.trendSparkHead}>
+            <h3 className={styles.trendChartTitle}>Daily volume</h3>
+            <span className={styles.trendSparkTotal}>
+              {daily.reduce((s, d) => s + d.total, 0)} total across window
+            </span>
+          </div>
+          <ResponsiveContainer width="100%" height={90}>
+            <AreaChart data={daily} margin={{ top: 4, right: 8, bottom: 0, left: 8 }}>
+              <defs>
+                <linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={CHART.primary} stopOpacity={0.35} />
+                  <stop offset="100%" stopColor={CHART.primary} stopOpacity={0.02} />
+                </linearGradient>
+              </defs>
+              <XAxis dataKey="label" tick={{ fontSize: 10, fill: CHART.axis }} axisLine={false} tickLine={false} minTickGap={24} />
+              <Tooltip content={<ChartTooltip />} />
+              {boundaryLabel && (
+                <ReferenceLine x={boundaryLabel} stroke={CHART.axisLine} strokeDasharray="3 3" label={{ value: 'current', fontSize: 10, fill: CHART.axis, position: 'insideTopRight' }} />
+              )}
+              <Area type="monotone" dataKey="total" name="Feedback" stroke={CHART.primary} strokeWidth={2} fill="url(#sparkFill)" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
       <div className={styles.trendKpis}>
         <TrendKpi
           label="Feedback volume"
@@ -178,6 +305,25 @@ function TrendVisuals({ report }: { report: TrendReport }) {
                     <Cell key={`c-${d.sentiment}`} fill={SENTIMENT_COLOR[d.sentiment] ?? CHART.primary} />
                   ))}
                 </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+
+        <div className={styles.trendChartCard}>
+          <h3 className={styles.trendChartTitle}>By department: baseline vs current</h3>
+          {deptData.length === 0 ? (
+            <p className={styles.nlpEmpty}>No department data in this window.</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={Math.max(220, deptData.length * 44)}>
+              <BarChart data={deptData} layout="vertical" margin={{ top: 8, right: 16, bottom: 8, left: 8 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={CHART.grid} horizontal={false} />
+                <XAxis type="number" allowDecimals={false} tick={{ fontSize: 12, fill: CHART.axis }} axisLine={false} tickLine={false} />
+                <YAxis type="category" dataKey="department" width={140} tick={{ fontSize: 12, fill: '#334155' }} axisLine={false} tickLine={false} />
+                <Tooltip cursor={{ fill: 'rgba(0,89,184,0.06)' }} content={<ChartTooltip />} />
+                <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
+                <Bar dataKey="baseline" name="Baseline" fill={CHART.neutral} radius={[0, 4, 4, 0]} barSize={11} />
+                <Bar dataKey="current" name="Current" fill={CHART.teal} radius={[0, 4, 4, 0]} barSize={11} />
               </BarChart>
             </ResponsiveContainer>
           )}

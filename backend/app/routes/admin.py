@@ -52,6 +52,7 @@ def _aggregate_window(feedback: list[Feedback]) -> dict:
     """
     theme_counts: dict[str, int] = {}
     sentiment_counts: dict[str, int] = {}
+    department_counts: dict[str, int] = {}
     severity_total = 0
     severity_n = 0
 
@@ -59,6 +60,11 @@ def _aggregate_window(feedback: list[Feedback]) -> dict:
         # Sentiment counts (NULL sentiment surfaced as "unknown").
         key = fb.sentiment if fb.sentiment is not None else "unknown"
         sentiment_counts[key] = sentiment_counts.get(key, 0) + 1
+
+        # Department routing counts (NULL department is skipped).
+        dept = getattr(fb, "department", None)
+        if dept:
+            department_counts[dept] = department_counts.get(dept, 0) + 1
 
         result = fb.enrichment_result
         if result is None:
@@ -76,6 +82,7 @@ def _aggregate_window(feedback: list[Feedback]) -> dict:
         "count": len(feedback),
         "theme_counts": theme_counts,
         "sentiment_counts": sentiment_counts,
+        "department_counts": department_counts,
         "average_severity": average_severity,
     }
 
@@ -603,10 +610,28 @@ async def run_trend_analysis(
             }
         )
 
+    # daily: per-day volume across both windows (for the sparkline), tagged by
+    # which window each day belongs to so the frontend can shade the boundary.
+    daily_map: dict[str, dict] = {}
+
+    def _bucket(items: list[Feedback], key: str) -> None:
+        for fb in items:
+            day = fb.created_at.date().isoformat()
+            entry = daily_map.setdefault(
+                day, {"date": day, "baseline": 0, "current": 0, "total": 0}
+            )
+            entry[key] += 1
+            entry["total"] += 1
+
+    _bucket(baseline_feedback, "baseline")
+    _bucket(current_feedback, "current")
+    daily = [daily_map[d] for d in sorted(daily_map)]
+
     return {
         "baseline": baseline,
         "current": current,
         "theme_spikes": theme_spikes,
         "sentiment_shifts": sentiment_shifts,
         "severity_escalations": severity_escalations,
+        "daily": daily,
     }
