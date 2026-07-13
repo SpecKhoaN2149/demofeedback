@@ -62,14 +62,16 @@
   outline: none;
 }
 
+/* Rendered in a portal on document.body with fixed positioning, so it can
+   never be clipped by a scrollable/overflow ancestor (e.g. a table wrapper).
+   `top`/`left` are supplied inline; the transform anchors it above and
+   centered on the ⓘ icon. */
 .tooltip {
-  position: absolute;
-  bottom: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 50;
+  position: fixed;
+  transform: translate(-50%, -100%);
+  z-index: 1000;
   width: max-content;
-  max-width: 260px;
+  max-width: 280px;
   padding: var(--spectrum-space-2) var(--spectrum-space-3);
   background-color: var(--spectrum-color-neutral-700);
   color: var(--spectrum-color-text-inverse);
@@ -77,16 +79,13 @@
   font-weight: var(--spectrum-font-weight-normal);
   line-height: var(--spectrum-line-height-normal);
   border-radius: var(--spectrum-radius-md);
-  box-shadow: var(--spectrum-shadow-md);
+  box-shadow: var(--spectrum-shadow-lg);
   white-space: normal;
   text-align: left;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity var(--spectrum-transition-fast) ease;
   pointer-events: none;
 }
 
-/* Small caret under the bubble. */
+/* Small caret under the bubble, centered on the anchor. */
 .tooltip::after {
   content: '';
   position: absolute;
@@ -95,17 +94,4 @@
   transform: translateX(-50%);
   border: 5px solid transparent;
   border-top-color: var(--spectrum-color-neutral-700);
-}
-
-.info:hover .tooltip,
-.info:focus-visible .tooltip,
-.info:focus-within .tooltip {
-  opacity: 1;
-  visibility: visible;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .tooltip {
-    transition: none;
-  }
 }
