@@ -114,18 +114,36 @@ export default function TicketDetail() {
     loadComments()
   }, [loadTicket, loadComments])
 
+  // Live updates: poll the ticket + comments every 8s so status changes and
+  // comments posted by other staff appear without a manual refresh. Polling
+  // pauses while the tab is hidden and never disrupts the comment being typed.
+  useEffect(() => {
+    if (!token || !id) return
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        loadTicket()
+        loadComments()
+      }
+    }, 8000)
+    return () => clearInterval(interval)
+  }, [token, id, loadTicket, loadComments])
+
+  // Stable key of the linked feedback ids so the hydration effect only re-runs
+  // when the set actually changes (not on every poll that replaces the ticket).
+  const linkedKey = ticket ? ticket.feedback_ids.map(String).join(',') : ''
+
   // Hydrate the linked feedback records so we can show a readable preview of
   // each (rather than a truncated id).
   useEffect(() => {
     let cancelled = false
     async function loadLinked() {
-      if (!token || !ticket || ticket.feedback_ids.length === 0) {
+      if (!token || !linkedKey) {
         setLinked([])
         return
       }
       try {
         const rows = await Promise.all(
-          ticket.feedback_ids.map((fid) => getAdminFeedback(token, String(fid)))
+          linkedKey.split(',').map((fid) => getAdminFeedback(token, fid))
         )
         if (!cancelled) setLinked(rows)
       } catch {
@@ -136,7 +154,7 @@ export default function TicketDetail() {
     return () => {
       cancelled = true
     }
-  }, [token, ticket])
+  }, [token, linkedKey])
 
   async function handleAdvance() {
     if (!token || !ticket) return
