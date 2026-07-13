@@ -17,6 +17,24 @@ import styles from './admin.module.css'
 
 const PAGE_SIZE = 10
 
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+/** Render feedback text with any mentioned person names highlighted inline. */
+function renderWithMentions(text: string, names: string[]) {
+  if (names.length === 0) return text
+  const re = new RegExp(`(${names.map(escapeRegExp).join('|')})`, 'g')
+  const lookup = new Set(names)
+  return text.split(re).map((part, i) =>
+    lookup.has(part) ? (
+      <mark key={i} className={styles.mentionMark}>{part}</mark>
+    ) : (
+      part
+    )
+  )
+}
+
 // Module-level so the sort memo stays stable across renders.
 const MARKETING_SORT: Record<string, SortGetter<MarketingEntry>> = {
   text: (e) => e.text,
@@ -37,7 +55,7 @@ export default function MarketingLog() {
   const [offset, setOffset] = useState(0)
   const [searchParams, setSearchParams] = useSearchParams()
   const [search, setSearch] = useState(searchParams.get('q') ?? '')
-  const [kudosOnly, setKudosOnly] = useState(searchParams.get('kudos') === '1')
+  const [mentionsOnly, setMentionsOnly] = useState(searchParams.get('mentions') === '1')
   const paramSort = searchParams.get('sort')
   const initialSortKey =
     paramSort && MARKETING_SORT[paramSort] ? paramSort : 'created_at'
@@ -73,11 +91,11 @@ export default function MarketingLog() {
     if (!data) return []
     const q = search.trim().toLowerCase()
     return data.items.filter((e) => {
-      if (kudosOnly && extractMentionedNames(e.text).length === 0) return false
+      if (mentionsOnly && extractMentionedNames(e.text).length === 0) return false
       if (!q) return true
       return [e.text, e.source_type, e.platform ?? ''].join(' ').toLowerCase().includes(q)
     })
-  }, [data, search, kudosOnly])
+  }, [data, search, mentionsOnly])
 
   const { sorted, sortKey, sortDir, toggleSort, setSort } = useSort(
     filteredItems,
@@ -87,25 +105,25 @@ export default function MarketingLog() {
   )
 
   const filtersActive =
-    search.trim() !== '' || kudosOnly || sortKey !== 'created_at' || sortDir !== 'desc'
+    search.trim() !== '' || mentionsOnly || sortKey !== 'created_at' || sortDir !== 'desc'
 
   function clearFilters() {
     setSearch('')
-    setKudosOnly(false)
+    setMentionsOnly(false)
     setSort('created_at', 'desc')
   }
 
-  // Persist search/kudos/sort to the URL (replace) for shareable views.
+  // Persist search/mentions/sort to the URL (replace) for shareable views.
   useEffect(() => {
     const p: Record<string, string> = {}
     if (search.trim()) p.q = search.trim()
-    if (kudosOnly) p.kudos = '1'
+    if (mentionsOnly) p.mentions = '1'
     if (sortKey) {
       p.sort = sortKey
       p.dir = sortDir
     }
     setSearchParams(p, { replace: true })
-  }, [search, kudosOnly, sortKey, sortDir, setSearchParams])
+  }, [search, mentionsOnly, sortKey, sortDir, setSearchParams])
 
   function goToPage(page: number) {
     setOffset((page - 1) * PAGE_SIZE)
@@ -170,10 +188,10 @@ export default function MarketingLog() {
           <label className={styles.filterToggle}>
             <input
               type="checkbox"
-              checked={kudosOnly}
-              onChange={(e) => setKudosOnly(e.target.checked)}
+              checked={mentionsOnly}
+              onChange={(e) => setMentionsOnly(e.target.checked)}
             />
-            👏 Mentions a person
+            Mentions a person
           </label>
           {filtersActive && (
             <button type="button" className={styles.clearBtn} onClick={clearFilters}>
@@ -193,7 +211,6 @@ export default function MarketingLog() {
             <thead>
               <tr>
                 <SortHeader label="Feedback" colKey="text" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
-                <th>Kudos</th>
                 <SortHeader label="Source" colKey="source" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
                 <SortHeader label="Timestamp" colKey="created_at" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
                 <th>Original</th>
@@ -202,7 +219,7 @@ export default function MarketingLog() {
             <tbody>
               {sorted.length === 0 && (
                 <tr>
-                  <td colSpan={5} className={styles.nlpEmpty}>
+                  <td colSpan={4} className={styles.nlpEmpty}>
                     No feedback matches your search.
                   </td>
                 </tr>
@@ -216,18 +233,7 @@ export default function MarketingLog() {
                     className={styles.clickableRow}
                     onClick={() => navigate(`/admin/feedback/${entry.feedback_id}`)}
                   >
-                    <td className={styles.commentCell}>{entry.text}</td>
-                    <td>
-                      {names.length > 0 ? (
-                        <span className={styles.kudosCell}>
-                          {names.map((n) => (
-                            <span key={n} className={styles.kudosChip}>👏 {n}</span>
-                          ))}
-                        </span>
-                      ) : (
-                        <span className={styles.nlpEmpty}>—</span>
-                      )}
-                    </td>
+                    <td className={styles.commentCell}>{renderWithMentions(entry.text, names)}</td>
                     <td>
                       {src.label}
                       {src.detail ? ` · ${src.detail}` : ''}

@@ -610,24 +610,13 @@
   justify-content: center;
 }
 
-/* Kudos name chips in the marketing log. */
-.kudosCell {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--spectrum-space-1);
-}
-
-.kudosChip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 8px;
-  border-radius: var(--spectrum-radius-full);
+/* Inline highlight for a person's name mentioned in marketing feedback. */
+.mentionMark {
   background-color: var(--spectrum-color-success-light);
   color: var(--spectrum-color-success-text);
-  font-size: var(--spectrum-font-size-xs);
   font-weight: var(--spectrum-font-weight-semibold);
-  white-space: nowrap;
+  padding: 0 3px;
+  border-radius: var(--spectrum-radius-sm);
 }
 
 /* Destructive action button (delete). */
