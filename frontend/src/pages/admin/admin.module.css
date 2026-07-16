@@ -238,13 +238,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--spectrum-space-6);
-  align-items: stretch;
-}
-
-/* The two top cards (Feedback + NLP analysis) fill the row's full height so
-   they're always the same size. The full-width comments card is unaffected. */
-.detailGrid > * {
-  height: 100%;
+  align-items: start;
 }
 
 @media (max-width: 1023.98px) {
@@ -303,21 +297,28 @@
   min-width: 0;
 }
 
-/* Left column of the NLP card: stacked label/value sections that share the
-   exact rhythm of the right column (EnrichmentInsights) for a consistent look. */
-.nlpFields {
+@media (max-width: 640px) {
+  .nlpGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Shared stacked label/value sections used by BOTH detail cards (Feedback and
+   NLP Analysis) so they read consistently. Label sits above the value with the
+   same rhythm as EnrichmentInsights. */
+.fieldStack {
   display: flex;
   flex-direction: column;
   gap: var(--spectrum-space-5);
 }
 
-.nlpField {
+.fieldItem {
   display: flex;
   flex-direction: column;
   gap: var(--spectrum-space-2);
 }
 
-.nlpFieldLabel {
+.fieldLabel {
   font-size: var(--spectrum-font-size-xs);
   font-weight: var(--spectrum-font-weight-semibold);
   text-transform: uppercase;
@@ -325,19 +326,23 @@
   color: var(--spectrum-color-text-secondary);
 }
 
-.nlpFieldValue {
+.fieldValue {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: var(--spectrum-space-2);
   font-size: var(--spectrum-font-size-sm);
   color: var(--spectrum-color-text-primary);
-  text-transform: capitalize;
+  overflow-wrap: anywhere;
 }
 
-@media (max-width: 640px) {
-  .nlpGrid {
-    grid-template-columns: 1fr;
-  }
+/* For the free-text message: let it wrap as a normal paragraph, not a flex row. */
+.fieldValueText {
+  display: block;
+  font-size: var(--spectrum-font-size-sm);
+  color: var(--spectrum-color-text-primary);
+  line-height: var(--spectrum-line-height-normal);
+  overflow-wrap: anywhere;
 }
 
 /* ---- Dashboard NLP insights panel ---- */

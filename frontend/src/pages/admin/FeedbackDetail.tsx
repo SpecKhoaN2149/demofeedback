@@ -201,10 +201,10 @@ export default function FeedbackDetail() {
           <div className={styles.detailGrid}>
             <Card bordered>
               <h2>Feedback</h2>
-              <dl className={styles.detailList}>
-                <div className={styles.detailRow}>
-                  <dt>Source</dt>
-                  <dd>
+              <div className={styles.fieldStack}>
+                <div className={styles.fieldItem}>
+                  <span className={styles.fieldLabel}>Source</span>
+                  <span className={styles.fieldValue}>
                     <SourceBadge
                       sourceType={feedback.source_type}
                       platform={feedback.platform}
@@ -212,16 +212,15 @@ export default function FeedbackDetail() {
                     />
                     {feedback.location_city && (
                       <span className={styles.locationHint}>
-                        {' · '}
                         {feedback.location_city}
                         {feedback.location_state ? `, ${feedback.location_state}` : ''}
                       </span>
                     )}
-                  </dd>
+                  </span>
                 </div>
-                <div className={styles.detailRow}>
-                  <dt>Ticket</dt>
-                  <dd>
+                <div className={styles.fieldItem}>
+                  <span className={styles.fieldLabel}>Ticket</span>
+                  <span className={styles.fieldValue}>
                     {feedback.ticket_id ? (
                       <Link
                         to={`/admin/tickets/${feedback.ticket_id}`}
@@ -232,17 +231,19 @@ export default function FeedbackDetail() {
                     ) : (
                       'No ticket linked'
                     )}
-                  </dd>
+                  </span>
                 </div>
-                <div className={styles.detailRow}>
-                  <dt>Submitted</dt>
-                  <dd>{new Date(feedback.created_at).toLocaleString()}</dd>
+                <div className={styles.fieldItem}>
+                  <span className={styles.fieldLabel}>Submitted</span>
+                  <span className={styles.fieldValue}>
+                    {new Date(feedback.created_at).toLocaleString()}
+                  </span>
                 </div>
-                <div className={styles.detailRow}>
-                  <dt>Message</dt>
-                  <dd>{feedback.text}</dd>
+                <div className={styles.fieldItem}>
+                  <span className={styles.fieldLabel}>Message</span>
+                  <span className={styles.fieldValueText}>{feedback.text}</span>
                 </div>
-              </dl>
+              </div>
             </Card>
 
             <Card bordered>
@@ -253,28 +254,28 @@ export default function FeedbackDetail() {
 
               <div className={styles.nlpGrid}>
                 {/* Left column: NLP-derived routing/scoring fields, styled as
-                    the same stacked label/value sections as the right column. */}
-                <div className={styles.nlpFields}>
-                  <div className={styles.nlpField}>
-                    <span className={styles.nlpFieldLabel}>Sentiment</span>
-                    <span className={styles.nlpFieldValue}>{humanize(feedback.sentiment)}</span>
+                    the same stacked label/value sections as the Feedback card. */}
+                <div className={styles.fieldStack}>
+                  <div className={styles.fieldItem}>
+                    <span className={styles.fieldLabel}>Sentiment</span>
+                    <span className={styles.fieldValue}>{humanize(feedback.sentiment)}</span>
                   </div>
-                  <div className={styles.nlpField}>
-                    <span className={styles.nlpFieldLabel}>Severity</span>
-                    <span className={styles.nlpFieldValue}>
+                  <div className={styles.fieldItem}>
+                    <span className={styles.fieldLabel}>Severity</span>
+                    <span className={styles.fieldValue}>
                       <SeverityBadge
                         severity={feedback.severity}
                         reasoning={feedback.severity_reasoning}
                       />
                     </span>
                   </div>
-                  <div className={styles.nlpField}>
-                    <span className={styles.nlpFieldLabel}>Department</span>
-                    <span className={styles.nlpFieldValue}>{feedback.department ?? '—'}</span>
+                  <div className={styles.fieldItem}>
+                    <span className={styles.fieldLabel}>Department</span>
+                    <span className={styles.fieldValue}>{feedback.department ?? '—'}</span>
                   </div>
-                  <div className={styles.nlpField}>
-                    <span className={styles.nlpFieldLabel}>Decision</span>
-                    <span className={styles.nlpFieldValue}>
+                  <div className={styles.fieldItem}>
+                    <span className={styles.fieldLabel}>Decision</span>
+                    <span className={styles.fieldValue}>
                       {humanize(feedback.triage_outcome)}
                       {feedback.needs_review && (
                         <>
