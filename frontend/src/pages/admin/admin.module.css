@@ -295,16 +295,43 @@
 .nlpGrid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: var(--spectrum-space-5);
+  gap: var(--spectrum-space-6);
   align-items: start;
-}
-
-.nlpGrid .detailRow {
-  grid-template-columns: 96px 1fr;
 }
 
 .nlpInsights {
   min-width: 0;
+}
+
+/* Left column of the NLP card: stacked label/value sections that share the
+   exact rhythm of the right column (EnrichmentInsights) for a consistent look. */
+.nlpFields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spectrum-space-5);
+}
+
+.nlpField {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spectrum-space-2);
+}
+
+.nlpFieldLabel {
+  font-size: var(--spectrum-font-size-xs);
+  font-weight: var(--spectrum-font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--spectrum-color-text-secondary);
+}
+
+.nlpFieldValue {
+  display: flex;
+  align-items: center;
+  gap: var(--spectrum-space-2);
+  font-size: var(--spectrum-font-size-sm);
+  color: var(--spectrum-color-text-primary);
+  text-transform: capitalize;
 }
 
 @media (max-width: 640px) {

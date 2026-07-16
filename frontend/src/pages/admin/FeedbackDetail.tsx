@@ -22,6 +22,13 @@ import SourceBadge from '../../components/nlp/SourceBadge'
 import SeverityBadge from '../../components/nlp/SeverityBadge'
 import styles from './admin.module.css'
 
+/** Turn a raw enum value (e.g. "action_required") into a readable label. */
+function humanize(value: string | null | undefined): string {
+  if (!value) return '—'
+  const spaced = value.replace(/_/g, ' ')
+  return spaced.charAt(0).toUpperCase() + spaced.slice(1)
+}
+
 /**
  * Admin feedback detail (route: /admin/feedback/:id).
  *
@@ -245,38 +252,39 @@ export default function FeedbackDetail() {
               </div>
 
               <div className={styles.nlpGrid}>
-                {/* Left column: NLP-derived routing/scoring fields. */}
-                <dl className={styles.detailList}>
-                  <div className={styles.detailRow}>
-                    <dt>Sentiment</dt>
-                    <dd>{feedback.sentiment ?? '—'}</dd>
+                {/* Left column: NLP-derived routing/scoring fields, styled as
+                    the same stacked label/value sections as the right column. */}
+                <div className={styles.nlpFields}>
+                  <div className={styles.nlpField}>
+                    <span className={styles.nlpFieldLabel}>Sentiment</span>
+                    <span className={styles.nlpFieldValue}>{humanize(feedback.sentiment)}</span>
                   </div>
-                  <div className={styles.detailRow}>
-                    <dt>Severity</dt>
-                    <dd>
+                  <div className={styles.nlpField}>
+                    <span className={styles.nlpFieldLabel}>Severity</span>
+                    <span className={styles.nlpFieldValue}>
                       <SeverityBadge
                         severity={feedback.severity}
                         reasoning={feedback.severity_reasoning}
                       />
-                    </dd>
+                    </span>
                   </div>
-                  <div className={styles.detailRow}>
-                    <dt>Department</dt>
-                    <dd>{feedback.department ?? '—'}</dd>
+                  <div className={styles.nlpField}>
+                    <span className={styles.nlpFieldLabel}>Department</span>
+                    <span className={styles.nlpFieldValue}>{feedback.department ?? '—'}</span>
                   </div>
-                  <div className={styles.detailRow}>
-                    <dt>Decision</dt>
-                    <dd>
-                      {feedback.triage_outcome ?? '—'}
+                  <div className={styles.nlpField}>
+                    <span className={styles.nlpFieldLabel}>Decision</span>
+                    <span className={styles.nlpFieldValue}>
+                      {humanize(feedback.triage_outcome)}
                       {feedback.needs_review && (
                         <>
                           {' '}
                           <Badge color="warning">Needs review</Badge>
                         </>
                       )}
-                    </dd>
+                    </span>
                   </div>
-                </dl>
+                </div>
 
                 {/* Right column: detected themes / language / factors. */}
                 <div className={styles.nlpInsights}>
