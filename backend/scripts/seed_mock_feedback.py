@@ -487,6 +487,78 @@ def seed() -> None:
     )
 
 
+def reset_demo_data() -> dict:
+    """Wipe ALL feedback/tickets/comments, then re-seed the mock demo set.
+
+    This is the "overwrite whatever is there" reset used by the admin
+    Reset Demo Data button: it removes any data accumulated during a previous
+    demo run (submitted feedback, advanced tickets, manual comments) and
+    restores the deterministic mock dataset to its fresh state (Denver outage
+    ticket open, no comments, ready to be advanced live).
+
+    Returns a dict of the row counts that were removed and re-seeded.
+    """
+    init_db()
+
+    with get_connection() as conn:
+        removed = {
+            "feedback": conn.execute("SELECT COUNT(*) FROM feedback").fetchone()[0],
+            "tickets": conn.execute("SELECT COUNT(*) FROM tickets").fetchone()[0],
+            "comments": conn.execute("SELECT COUNT(*) FROM ticket_comments").fetchone()[0],
+        }
+        # Full wipe. Clear comments and unlink feedback first so no FK dangles,
+        # then remove feedback and tickets outright.
+        conn.execute("DELETE FROM ticket_comments")
+        conn.execute("UPDATE feedback SET ticket_id = NULL")
+        conn.execute("DELETE FROM feedback")
+        conn.execute("DELETE FROM tickets")
+        conn.commit()
+
+    feedback, tickets, comments = _build_records()
+    with get_connection() as conn:
+        _ensure_columns(conn)
+        for t in tickets:
+            conn.execute(
+                "INSERT OR REPLACE INTO tickets (ticket_id, issue_category, description, priority, status, created_at) "
+                "VALUES (?, ?, ?, ?, ?, ?)",
+                (t["ticket_id"], t["issue_category"], t["description"], t["priority"], t["status"], t["created_at"]),
+            )
+        for f in feedback:
+            conn.execute(
+                """
+                INSERT OR REPLACE INTO feedback (
+                    feedback_id, text, source_type, channel, platform, created_at,
+                    enrichment_status, enrichment_result, sentiment, triage_outcome,
+                    triage_decision_source, needs_review, ticket_id,
+                    department, severity, severity_reasoning,
+                    location_city, location_state, latitude, longitude
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    f["feedback_id"], f["text"], f["source_type"], f["channel"], f["platform"],
+                    f["created_at"], f["enrichment_status"], f["enrichment_result"], f["sentiment"],
+                    f["triage_outcome"], f["triage_decision_source"], f["needs_review"], f["ticket_id"],
+                    f["department"], f["severity"], f["severity_reasoning"],
+                    f["location_city"], f["location_state"], f["latitude"], f["longitude"],
+                ),
+            )
+        for c in comments:
+            conn.execute(
+                "INSERT INTO ticket_comments (ticket_id, author, created_at, text) VALUES (?, ?, ?, ?)",
+                (c["ticket_id"], c["author"], c["created_at"], c["text"]),
+            )
+        conn.commit()
+
+    return {
+        "removed": removed,
+        "seeded": {
+            "feedback": len(feedback),
+            "tickets": len(tickets),
+            "comments": len(comments),
+        },
+    }
+
+
 def clear() -> None:
     init_db()
     feedback_ids = [_mid(f"feedback-{i}") for i in range(300)]  # generous upper bound

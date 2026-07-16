@@ -10,6 +10,7 @@ All admin endpoints require a valid session token via ``Depends(require_admin)``
 Validates: Requirements 3.6, 3.7, 3.8, 10.1, 10.2, 10.3, 11.4
 """
 
+import os
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -358,6 +359,43 @@ async def delete_ticket(
             detail="Ticket not found",
         )
     return result
+
+
+# =============================================================================
+# Demo Endpoints
+# =============================================================================
+
+
+@router.post("/demo/reset")
+async def reset_demo(admin: AdminUser = Depends(require_admin)):
+    """Wipe all data and restore the fresh mock demo dataset in one click.
+
+    Removes anything accumulated during a previous demo (submitted feedback,
+    advanced tickets, manual comments) and re-seeds the deterministic mock set
+    so every demo starts from the same clean state — no shell command needed.
+
+    Gated behind the ``ALLOW_MOCK_SEED`` environment flag (same flag the seed
+    CLI uses) so it can only run where mock data is explicitly permitted.
+
+    Validates: Requirements 11.4
+    """
+    if not os.environ.get("ALLOW_MOCK_SEED"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Demo reset is disabled (set ALLOW_MOCK_SEED=1 to enable).",
+        )
+
+    try:
+        from scripts.seed_mock_feedback import reset_demo_data
+
+        return reset_demo_data()
+    except HTTPException:
+        raise
+    except Exception as exc:  # pragma: no cover - defensive
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Demo reset failed: {exc}",
+        )
 
 
 @router.patch("/tickets/{ticket_id}/advance", response_model=Ticket)
