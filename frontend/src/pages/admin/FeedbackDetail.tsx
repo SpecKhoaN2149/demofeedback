@@ -213,35 +213,6 @@ export default function FeedbackDetail() {
                   </dd>
                 </div>
                 <div className={styles.detailRow}>
-                  <dt>Sentiment</dt>
-                  <dd>{feedback.sentiment ?? '—'}</dd>
-                </div>
-                <div className={styles.detailRow}>
-                  <dt>Severity</dt>
-                  <dd>
-                    <SeverityBadge
-                      severity={feedback.severity}
-                      reasoning={feedback.severity_reasoning}
-                    />
-                  </dd>
-                </div>
-                <div className={styles.detailRow}>
-                  <dt>Department</dt>
-                  <dd>{feedback.department ?? '—'}</dd>
-                </div>
-                <div className={styles.detailRow}>
-                  <dt>Decision</dt>
-                  <dd>
-                    {feedback.triage_outcome ?? '—'}
-                    {feedback.needs_review && (
-                      <>
-                        {' '}
-                        <Badge color="warning">Needs review</Badge>
-                      </>
-                    )}
-                  </dd>
-                </div>
-                <div className={styles.detailRow}>
                   <dt>Ticket</dt>
                   <dd>
                     {feedback.ticket_id ? (
@@ -272,6 +243,38 @@ export default function FeedbackDetail() {
                 <h2>NLP analysis</h2>
                 <EnrichmentStatusBadge status={status} />
               </div>
+
+              <dl className={styles.detailList}>
+                <div className={styles.detailRow}>
+                  <dt>Sentiment</dt>
+                  <dd>{feedback.sentiment ?? '—'}</dd>
+                </div>
+                <div className={styles.detailRow}>
+                  <dt>Severity</dt>
+                  <dd>
+                    <SeverityBadge
+                      severity={feedback.severity}
+                      reasoning={feedback.severity_reasoning}
+                    />
+                  </dd>
+                </div>
+                <div className={styles.detailRow}>
+                  <dt>Department</dt>
+                  <dd>{feedback.department ?? '—'}</dd>
+                </div>
+                <div className={styles.detailRow}>
+                  <dt>Decision</dt>
+                  <dd>
+                    {feedback.triage_outcome ?? '—'}
+                    {feedback.needs_review && (
+                      <>
+                        {' '}
+                        <Badge color="warning">Needs review</Badge>
+                      </>
+                    )}
+                  </dd>
+                </div>
+              </dl>
 
               {status === 'completed' && result ? (
                 <EnrichmentInsights data={result} hideSeverity />

@@ -238,7 +238,13 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--spectrum-space-6);
-  align-items: start;
+  align-items: stretch;
+}
+
+/* The two top cards (Feedback + NLP analysis) fill the row's full height so
+   they're always the same size. The full-width comments card is unaffected. */
+.detailGrid > * {
+  height: 100%;
 }
 
 @media (max-width: 1023.98px) {
