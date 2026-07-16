@@ -456,17 +456,6 @@ export function deleteTicket(token: string, id: string): Promise<DeleteResult> {
   return apiDelete<DeleteResult>(`/admin/tickets/${id}`, token)
 }
 
-/** Result of a demo reset: rows removed and rows re-seeded. */
-export interface DemoResetResult {
-  removed: { feedback: number; tickets: number; comments: number }
-  seeded: { feedback: number; tickets: number; comments: number }
-}
-
-/** POST /api/admin/demo/reset — Wipe all data and restore the fresh mock demo set */
-export function resetDemo(token: string): Promise<DemoResetResult> {
-  return apiPost<DemoResetResult>('/admin/demo/reset', {}, token)
-}
-
 /** GET /api/admin/feedback — List feedback rows (paginated) */
 export function listAdminFeedback(
   token: string,

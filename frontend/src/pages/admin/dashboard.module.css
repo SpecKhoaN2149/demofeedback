@@ -76,49 +76,6 @@
   100% { box-shadow: 0 0 0 0 rgba(46, 125, 50, 0); }
 }
 
-/* Header action cluster (reset button + live pill). */
-.headerActions {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--spectrum-space-3);
-}
-
-/* "Reset Demo Data" button — light, understated, not a pill. */
-.resetBtn {
-  padding: 8px 16px;
-  border-radius: var(--spectrum-radius-md);
-  border: 1px solid var(--spectrum-color-border);
-  background: var(--spectrum-color-surface);
-  color: var(--spectrum-color-text-secondary);
-  font-size: var(--spectrum-font-size-sm);
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-}
-
-.resetBtn:hover:not(:disabled) {
-  background: var(--spectrum-color-surface-hover, #f5f5f5);
-  border-color: var(--spectrum-color-text-secondary);
-  color: var(--spectrum-color-text-primary);
-}
-
-.resetBtn:disabled {
-  opacity: 0.6;
-  cursor: default;
-}
-
-/* Confirmation banner shown after a reset completes. */
-.resetBanner {
-  margin-bottom: var(--spectrum-space-6);
-  padding: 10px 16px;
-  border-radius: var(--spectrum-radius-md);
-  background: var(--spectrum-color-success-light);
-  border: 1px solid rgba(46, 125, 50, 0.25);
-  color: var(--spectrum-color-success);
-  font-size: var(--spectrum-font-size-sm);
-  font-weight: 600;
-}
-
 /* ---- Section headings ---- */
 .sectionTitle {
   display: flex;

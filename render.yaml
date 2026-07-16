@@ -20,9 +20,6 @@ services:
       # Gemini model priority (matches local defaults).
       - key: GEMINI_MODEL_PRIORITY
         value: gemini-3.1-flash-lite,gemini-2.5-flash-lite,gemini-2.5-flash
-      # Enables the admin "Reset Demo Data" button and the seed CLI.
-      - key: ALLOW_MOCK_SEED
-        value: "1"
       # Secrets — set these values in the Render dashboard, not in git.
       - key: GEMINI_API_KEY
         sync: false
