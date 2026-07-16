@@ -258,10 +258,12 @@ def _build_records() -> tuple[list[dict], list[dict], list[dict]]:
         )
 
     # ── Cluster D: Denver storm outage — 6 reports → ONE ticket ──────────────
+    # NOTE: kept at "open" with NO seeded comments so the live demo can show an
+    # admin advancing this ticket to in_progress and leaving the first comment.
     den_ticket = add_ticket(
         "denver-outage", "outage",
         "Storm-related outage affecting the Denver metro; multiple reports of total loss of service.",
-        "in_progress", days_ago=1,
+        "open", days_ago=1,
     )
     den_texts = [
         ("Power flickered and now internet is totally out in Denver. Storm damage?", "x"),
@@ -280,9 +282,7 @@ def _build_records() -> tuple[list[dict], list[dict], list[dict]]:
             platform=plat, channel=None if plat else "web_form",
             triage="action_required", ticket_id=den_ticket, days_ago=random.uniform(0.5, 1.5),
         )
-    comments.append({"ticket_id": den_ticket, "author": "admin",
-                     "text": "Confirmed storm damage to a Denver node; crews on site. Restoring in phases.",
-                     "created_at": (now - timedelta(hours=4)).isoformat()})
+    # Intentionally NO seeded comment on the Denver ticket for the demo.
 
     # ── Cluster E: NYC installation backlog — 4 reports → ONE ticket ─────────
     nyc_ticket = add_ticket(
