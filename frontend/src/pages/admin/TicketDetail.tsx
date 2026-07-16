@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, type FormEvent } from 'react'
+import { useEffect, useRef, useState, useCallback, type FormEvent } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import {
@@ -58,6 +58,28 @@ export default function TicketDetail() {
   const [posting, setPosting] = useState(false)
   const [postError, setPostError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
+
+  // Sync the Linked Feedback card's height to the Ticket card so the two
+  // bubbles are the same size; the linked list scrolls internally when longer.
+  const ticketCardRef = useRef<HTMLDivElement>(null)
+  const [linkedHeight, setLinkedHeight] = useState<number | undefined>(undefined)
+
+  useEffect(() => {
+    const el = ticketCardRef.current
+    if (!el) return
+    const update = () => {
+      // On stacked (mobile) layouts, let the card size naturally.
+      setLinkedHeight(window.innerWidth < 1024 ? undefined : el.offsetHeight)
+    }
+    update()
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    window.addEventListener('resize', update)
+    return () => {
+      ro.disconnect()
+      window.removeEventListener('resize', update)
+    }
+  }, [ticket])
 
   async function handleDelete() {
     if (!token || !ticket) return
@@ -241,8 +263,8 @@ export default function TicketDetail() {
         )}
 
         {ticket && (
-          <div className={styles.detailGrid}>
-            <Card bordered>
+          <div className={styles.ticketGrid}>
+            <Card bordered ref={ticketCardRef}>
               <div className={styles.nlpHeader}>
                 <h2>Ticket</h2>
                 <span className={`${styles.statusPill} ${STATUS_PILL[status] ?? ''}`}>
@@ -291,7 +313,11 @@ export default function TicketDetail() {
               </div>
             </Card>
 
-            <Card bordered>
+            <Card
+              bordered
+              className={styles.linkedCard}
+              style={linkedHeight ? { height: linkedHeight } : undefined}
+            >
               <h2>Linked Feedback</h2>
               {ticket.feedback_ids.length === 0 ? (
                 <p className={styles.nlpEmpty}>No feedback linked to this ticket.</p>

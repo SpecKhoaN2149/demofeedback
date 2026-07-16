@@ -18,6 +18,8 @@ export interface CardProps {
   tabIndex?: number
   /** Accessible label, useful for interactive cards without visible text. */
   'aria-label'?: string
+  /** Optional inline styles (e.g. a synced height). */
+  style?: React.CSSProperties
 }
 
 /**
@@ -40,6 +42,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
       onKeyDown,
       tabIndex,
       'aria-label': ariaLabel,
+      style,
     },
     ref
   ) => {
@@ -78,7 +81,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
         }
 
     return (
-      <div ref={ref} className={classes} aria-label={ariaLabel} {...interactiveProps}>
+      <div ref={ref} className={classes} aria-label={ariaLabel} style={style} {...interactiveProps}>
         {children}
       </div>
     )

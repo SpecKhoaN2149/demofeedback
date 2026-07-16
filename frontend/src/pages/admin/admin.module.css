@@ -710,6 +710,28 @@
 }
 
 /* Linked-feedback list on the ticket detail page. */
+/* Ticket detail grid: cards sit at their natural top; the linked-feedback card
+   height is synced to the ticket card via JS and scrolls internally. */
+.ticketGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spectrum-space-6);
+  align-items: start;
+}
+
+@media (max-width: 1023.98px) {
+  .ticketGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Linked-feedback card: fixed (synced) height, header stays put, list scrolls. */
+.linkedCard {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 .linkedList {
   list-style: none;
   margin: var(--spectrum-space-2) 0 0;
@@ -717,6 +739,9 @@
   display: flex;
   flex-direction: column;
   gap: var(--spectrum-space-2);
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .linkedItem {
