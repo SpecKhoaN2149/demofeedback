@@ -99,6 +99,43 @@ def _normalize_demo(text: str) -> str:
     return " ".join(t.split())
 
 
+# The mock seed (backend/scripts/seed_mock_feedback.py) creates a deterministic
+# "Denver outage" ticket via uuid5 with this namespace + key. We recompute the
+# same id here so the scripted demo feedback can attach to that existing cluster.
+_SEED_NS = uuid.UUID("00000000-0000-0000-0000-00000000feed")
+_DEMO_SEED_TICKET_KEY = "ticket-denver-outage"
+
+
+def _demo_link_to_seeded_ticket(feedback_id: uuid.UUID) -> bool:
+    """Attach the demo feedback to the seeded Denver outage ticket if it exists.
+
+    Returns True when linked (so the ticket shows a multi-feedback cluster),
+    or False when the seed ticket isn't present so the caller can fall back to
+    normal triage (which creates a fresh ticket).
+    """
+    try:
+        from app.services.ticketing_pipeline import TicketingPipeline
+
+        ticket_id = str(uuid.uuid5(_SEED_NS, _DEMO_SEED_TICKET_KEY))
+        pipeline = TicketingPipeline()
+        if pipeline.get_ticket(ticket_id) is None:
+            return False
+        pipeline.link_feedback(ticket_id, str(feedback_id))
+        _feedback_store.set_triage(
+            feedback_id,
+            "action_required",
+            decision_source="automated",
+            needs_review=False,
+        )
+        logger.info(
+            "Demo feedback %s linked to seeded ticket %s", feedback_id, ticket_id
+        )
+        return True
+    except Exception:  # pragma: no cover - defensive; fall back to normal triage
+        logger.exception("Demo ticket linkage failed for feedback %s", feedback_id)
+        return False
+
+
 def _demo_enrichment(text: str):
     """Return a canned (EnrichmentResult, sentiment) for the demo text, else None."""
     if _normalize_demo(text) != _normalize_demo(DEMO_FEEDBACK_TEXT):
@@ -395,7 +432,11 @@ async def run_enrichment(feedback_id: str, text: str) -> None:
         except Exception:  # pragma: no cover - location is best-effort
             pass
         logger.info("NLP enrichment: used scripted demo result for feedback %s", feedback_id)
-        _invoke_triage(feedback_id)
+        # For the demo, attach to the seeded "Denver outage" ticket (which
+        # already has several linked feedback) so the ticket shows a cluster.
+        # Falls back to normal triage (creates its own ticket) if unseeded.
+        if not _demo_link_to_seeded_ticket(fid):
+            _invoke_triage(feedback_id)
         return
 
     try:
