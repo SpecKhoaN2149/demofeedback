@@ -247,7 +247,7 @@ export default function TicketList() {
                     <SortHeader label="Category" colKey="issue_category" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
                     <SortHeader label="Priority" colKey="priority" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
                     <SortHeader label="Status" colKey="status" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
-                    <SortHeader label="Linked feedback" colKey="linked" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} className={styles.numCell} />
+                    <SortHeader label="Linked Feedback" colKey="linked" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} className={styles.numCell} />
                     <SortHeader label="Created" colKey="created_at" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
                     <th>Action</th>
                   </tr>

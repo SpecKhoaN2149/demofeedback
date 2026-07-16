@@ -288,6 +288,31 @@
   margin-bottom: var(--spectrum-space-4);
 }
 
+/* Two-column layout inside the NLP Analysis card: routing/scoring fields on
+   the left, detected themes/language on the right. Keeps the card compact so
+   its height stays close to the Feedback card. Collapses to one column on
+   narrow viewports. */
+.nlpGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--spectrum-space-5);
+  align-items: start;
+}
+
+.nlpGrid .detailRow {
+  grid-template-columns: 96px 1fr;
+}
+
+.nlpInsights {
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .nlpGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ---- Dashboard NLP insights panel ---- */
 .themeCloud {
   display: flex;

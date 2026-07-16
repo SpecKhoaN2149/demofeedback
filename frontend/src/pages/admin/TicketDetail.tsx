@@ -233,7 +233,7 @@ export default function TicketDetail() {
           )}
         </div>
 
-        <h1>Ticket detail</h1>
+        <h1>Ticket Details</h1>
 
         {loading && <p aria-live="polite">Loading ticket…</p>}
         {error && (
@@ -292,7 +292,7 @@ export default function TicketDetail() {
             </Card>
 
             <Card bordered>
-              <h2>Linked feedback</h2>
+              <h2>Linked Feedback</h2>
               {ticket.feedback_ids.length === 0 ? (
                 <p className={styles.nlpEmpty}>No feedback linked to this ticket.</p>
               ) : (

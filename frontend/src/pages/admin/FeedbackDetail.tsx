@@ -181,7 +181,7 @@ export default function FeedbackDetail() {
           )}
         </div>
 
-        <h1>Feedback detail</h1>
+        <h1>Feedback Details</h1>
 
         {loading && <p aria-live="polite">Loading feedback…</p>}
         {error && (
@@ -240,60 +240,66 @@ export default function FeedbackDetail() {
 
             <Card bordered>
               <div className={styles.nlpHeader}>
-                <h2>NLP analysis</h2>
+                <h2>NLP Analysis</h2>
                 <EnrichmentStatusBadge status={status} />
               </div>
 
-              <dl className={styles.detailList}>
-                <div className={styles.detailRow}>
-                  <dt>Sentiment</dt>
-                  <dd>{feedback.sentiment ?? '—'}</dd>
-                </div>
-                <div className={styles.detailRow}>
-                  <dt>Severity</dt>
-                  <dd>
-                    <SeverityBadge
-                      severity={feedback.severity}
-                      reasoning={feedback.severity_reasoning}
-                    />
-                  </dd>
-                </div>
-                <div className={styles.detailRow}>
-                  <dt>Department</dt>
-                  <dd>{feedback.department ?? '—'}</dd>
-                </div>
-                <div className={styles.detailRow}>
-                  <dt>Decision</dt>
-                  <dd>
-                    {feedback.triage_outcome ?? '—'}
-                    {feedback.needs_review && (
-                      <>
-                        {' '}
-                        <Badge color="warning">Needs review</Badge>
-                      </>
-                    )}
-                  </dd>
-                </div>
-              </dl>
+              <div className={styles.nlpGrid}>
+                {/* Left column: NLP-derived routing/scoring fields. */}
+                <dl className={styles.detailList}>
+                  <div className={styles.detailRow}>
+                    <dt>Sentiment</dt>
+                    <dd>{feedback.sentiment ?? '—'}</dd>
+                  </div>
+                  <div className={styles.detailRow}>
+                    <dt>Severity</dt>
+                    <dd>
+                      <SeverityBadge
+                        severity={feedback.severity}
+                        reasoning={feedback.severity_reasoning}
+                      />
+                    </dd>
+                  </div>
+                  <div className={styles.detailRow}>
+                    <dt>Department</dt>
+                    <dd>{feedback.department ?? '—'}</dd>
+                  </div>
+                  <div className={styles.detailRow}>
+                    <dt>Decision</dt>
+                    <dd>
+                      {feedback.triage_outcome ?? '—'}
+                      {feedback.needs_review && (
+                        <>
+                          {' '}
+                          <Badge color="warning">Needs review</Badge>
+                        </>
+                      )}
+                    </dd>
+                  </div>
+                </dl>
 
-              {status === 'completed' && result ? (
-                <EnrichmentInsights data={result} hideSeverity />
-              ) : status === 'pending' ? (
-                <Alert severity="info">
-                  Analysis is still running. Refresh in a moment to see themes,
-                  severity, and language.
-                </Alert>
-              ) : (
-                <Alert severity="warning">
-                  No NLP analysis is available for this feedback. This usually
-                  means enrichment failed or the NLP service is not configured
-                  (missing GEMINI_API_KEY).
-                </Alert>
-              )}
+                {/* Right column: detected themes / language / factors. */}
+                <div className={styles.nlpInsights}>
+                  {status === 'completed' && result ? (
+                    <EnrichmentInsights data={result} hideSeverity />
+                  ) : status === 'pending' ? (
+                    <Alert severity="info">
+                      Analysis is still running. Refresh in a moment to see
+                      themes, severity, and language.
+                    </Alert>
+                  ) : (
+                    <Alert severity="warning">
+                      No NLP analysis is available for this feedback. This
+                      usually means enrichment failed or the NLP service is not
+                      configured (missing GEMINI_API_KEY).
+                    </Alert>
+                  )}
+                </div>
+              </div>
             </Card>
 
             <Card bordered className={styles.commentsCard}>
-              <h2>Ticket comments</h2>
+              <h2>Ticket Comments</h2>
 
               {!ticketId ? (
                 <Alert severity="info">
